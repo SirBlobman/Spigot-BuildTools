@@ -466,6 +466,10 @@ public class Builder
         String mappingsVersion = mappingsHash.hash().toString().substring( 24 ); // Last 8 chars
 
         File finalMappedJar = new File( workDir, "mapped." + mappingsVersion + ".jar" );
+        List<String> deployFiles = new ArrayList<>();
+        List<String> deployClassifiers = new ArrayList<>();
+        List<String> deployTypes = new ArrayList<>();
+        
         if ( !finalMappedJar.exists() )
         {
             System.out.println( "Final mapped jar: " + finalMappedJar + " does not exist, creating (please wait)!" );
@@ -475,6 +479,7 @@ public class Builder
             File fieldMappings = new File( workDir, "bukkit-" + mappingsVersion + "-fields.csrg" );
             if ( versionInfo.getMappingsUrl() != null )
             {
+                
                 File mojangMappings = new File( workDir, "minecraft_server." + versionInfo.getMinecraftVersion() + ".txt" );
                 if ( !mojangMappings.exists() )
                 {
@@ -490,33 +495,24 @@ public class Builder
 
                     runMaven( CWD, "install:install-file", "-Dfile=" + memberMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-members", "-DgeneratePom=false" );
-                    
-                    if(Builder.deployUrl != null && Builder.deployId != null) {
-                        runMaven( CWD, "deploy:deploy-file", "-Dfile=" + memberMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
-                                "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-members", "-DgeneratePom=false",
-                                "-Durl=" + Builder.deployUrl, "-DrepositoryId=" + Builder.deployId);
-                    }
+                    deployFiles.add(memberMappings.toString());
+                    deployClassifiers.add("maps-spigot-members");
+                    deployTypes.add("csrg");
 
                     runMaven( CWD, "install:install-file", "-Dfile=" + classMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot", "-DgeneratePom=false" );
-                    
-                    if(Builder.deployUrl != null && Builder.deployId != null) {
-                        runMaven( CWD, "deploy:deploy-file", "-Dfile=" + classMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
-                                "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot", "-DgeneratePom=false",
-                                "-Durl=" + Builder.deployUrl, "-DrepositoryId=" + Builder.deployId);
-                    }
+                    deployFiles.add(classMappings.toString());
+                    deployClassifiers.add("maps-spigot");
+                    deployTypes.add("csrg");
                 } else if ( !fieldMappings.exists() )
                 {
                     mapUtil.makeFieldMaps( mojangMappings, fieldMappings, false );
 
                     runMaven( CWD, "install:install-file", "-Dfile=" + fieldMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-fields", "-DgeneratePom=false" );
-    
-                    if(Builder.deployUrl != null && Builder.deployId != null) {
-                        runMaven( CWD, "deploy:deploy-file", "-Dfile=" + fieldMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
-                                "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-fields", "-DgeneratePom=false",
-                                "-Durl=" + Builder.deployUrl, "-DrepositoryId=" + Builder.deployId);
-                    }
+                    deployFiles.add(fieldMappings.toString());
+                    deployClassifiers.add("maps-spigot-fields");
+                    deployTypes.add("csrg");
 
                     File combinedMappings = new File( workDir, "bukkit-" + mappingsVersion + "-combined.csrg" );
                     if ( !combinedMappings.exists() )
@@ -526,22 +522,16 @@ public class Builder
 
                     runMaven( CWD, "install:install-file", "-Dfile=" + combinedMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot", "-DgeneratePom=false" );
-                    
-                    if(Builder.deployUrl != null && Builder.deployId != null) {
-                        runMaven(CWD, "deploy:deploy-file", "-Dfile=" + combinedMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
-                                "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot", "-DgeneratePom=false",
-                                "-Durl=" + Builder.deployUrl, "-DrepositoryId=" + Builder.deployId);
-                    }
+                    deployFiles.add(combinedMappings.toString());
+                    deployClassifiers.add("maps-spigot");
+                    deployTypes.add("csrg");
                 }
 
                 runMaven( CWD, "install:install-file", "-Dfile=" + mojangMappings, "-Dpackaging=txt", "-DgroupId=org.spigotmc",
                         "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-mojang", "-DgeneratePom=false" );
-    
-                if(Builder.deployUrl != null && Builder.deployId != null) {
-                    runMaven(CWD, "deploy:deploy-file", "-Dfile=" + mojangMappings, "-Dpackaging=txt", "-DgroupId=org.spigotmc",
-                            "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-mojang", "-DgeneratePom=false",
-                            "-Durl=" + Builder.deployUrl, "-DrepositoryId=" + Builder.deployId);
-                }
+                deployFiles.add(mojangMappings.toString());
+                deployClassifiers.add("maps-mojang");
+                deployTypes.add("txt");
             }
 
             File clMappedJar = new File( finalMappedJar + "-cl" );
@@ -574,7 +564,8 @@ public class Builder
         if(Builder.deployUrl != null && Builder.deployId != null) {
             runMaven(CWD, "deploy:deploy-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
                     "-DartifactId=minecraft-server", "-Dversion=" + (versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT"),
-                    "-Durl=" + Builder.deployUrl, "-DrepositoryId=" + Builder.deployId);
+                    "-Durl=" + Builder.deployUrl, "-DrepositoryId=" + Builder.deployId, "-Dfiles=" + String.join(",", deployFiles),
+                    "-Dclassifiers=" + String.join(",", deployClassifiers), "-Dtypes=" + String.join(",", deployTypes));
         }
         
         File decompileDir = new File( workDir, "decompile-" + mappingsVersion );

@@ -562,10 +562,16 @@ public class Builder
                 "-DartifactId=minecraft-server", "-Dversion=" + ( versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT" ) );
         
         if(Builder.deployUrl != null && Builder.deployId != null) {
-            runMaven(CWD, "deploy:deploy-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
-                    "-DartifactId=minecraft-server", "-Dversion=" + (versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT"),
-                    "-Durl=" + Builder.deployUrl, "-DrepositoryId=" + Builder.deployId, "-Dfiles=" + String.join(",", deployFiles),
-                    "-Dclassifiers=" + String.join(",", deployClassifiers), "-Dtypes=" + String.join(",", deployTypes));
+            if(!deployFiles.isEmpty()) {
+                runMaven(CWD, "deploy:deploy-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
+                        "-DartifactId=minecraft-server", "-Dversion=" + (versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT"),
+                        "-Durl=" + Builder.deployUrl, "-DrepositoryId=" + Builder.deployId, "-Dfiles=" + String.join(",", deployFiles),
+                        "-Dclassifiers=" + String.join(",", deployClassifiers), "-Dtypes=" + String.join(",", deployTypes));
+            } else {
+                runMaven(CWD, "deploy:deploy-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
+                        "-DartifactId=minecraft-server", "-Dversion=" + (versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT"),
+                        "-Durl=" + Builder.deployUrl, "-DrepositoryId=" + Builder.deployId);
+            }
         }
         
         File decompileDir = new File( workDir, "decompile-" + mappingsVersion );

@@ -724,7 +724,7 @@ public class Builder
             
             if(Builder.deployUrl != null && Builder.deployId != null) {
                 bukkitArguments.add("deploy");
-                bukkitArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::" + Builder.deployUrl);
+                bukkitArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::default::" + Builder.deployUrl);
             }
             
             runMaven( bukkit, bukkitArguments.toArray(new String[0]));
@@ -737,7 +737,7 @@ public class Builder
     
             if(Builder.deployUrl != null && Builder.deployId != null) {
                 craftBukkitArguments.add("deploy");
-                craftBukkitArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::" + Builder.deployUrl);
+                craftBukkitArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::default::" + Builder.deployUrl);
             }
     
             runMaven(craftBukkit, craftBukkitArguments.toArray(new String[0]));
@@ -757,7 +757,7 @@ public class Builder
     
                 if(Builder.deployUrl != null && Builder.deployId != null) {
                     spigotArguments.add("deploy");
-                    spigotArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::" + Builder.deployUrl);
+                    spigotArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::default::" + Builder.deployUrl);
                 }
                 runMaven( spigot, spigotArguments.toArray(new String[0]));
 
@@ -777,7 +777,7 @@ public class Builder
     
                 if(Builder.deployUrl != null && Builder.deployId != null) {
                     spigotApiArguments.add("deploy");
-                    spigotApiArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::" + Builder.deployUrl);
+                    spigotApiArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::default::" + Builder.deployUrl);
                 }
                 
                 File spigotApi = new File( spigot, "Spigot-API" );

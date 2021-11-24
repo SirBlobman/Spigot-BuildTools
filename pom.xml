@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <name>BuildTools</name>
-    <description></description>
+    <description>A custom fork of md_5's BuildTools make by SirBlobman.</description>
 
     <properties>
         <build.number>unknown</build.number>

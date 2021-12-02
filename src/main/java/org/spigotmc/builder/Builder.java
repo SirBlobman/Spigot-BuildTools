@@ -716,12 +716,12 @@ public class Builder
             if(generateSource) {
                 bukkitArguments.add("source:jar");
             }
-    
-            bukkitArguments.add("install");
             
             if(Builder.deployUrl != null && Builder.deployId != null) {
                 bukkitArguments.add("deploy");
                 bukkitArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::default::" + Builder.deployUrl);
+            } else {
+                bukkitArguments.add("install");
             }
             
             runMaven( bukkit, bukkitArguments.toArray(new String[0]));
@@ -730,11 +730,12 @@ public class Builder
             System.out.println( "Compiling CraftBukkit" );
             List<String> craftBukkitArguments = new ArrayList<>();
             craftBukkitArguments.add("clean");
-            craftBukkitArguments.add("install");
     
             if(Builder.deployUrl != null && Builder.deployId != null) {
                 craftBukkitArguments.add("deploy");
                 craftBukkitArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::default::" + Builder.deployUrl);
+            } else {
+                craftBukkitArguments.add("install");
             }
     
             runMaven(craftBukkit, craftBukkitArguments.toArray(new String[0]));
@@ -750,12 +751,14 @@ public class Builder
                 System.out.println( "Compiling Spigot" );
                 List<String> spigotArguments = new ArrayList<>();
                 spigotArguments.add("clean");
-                spigotArguments.add("install");
     
                 if(Builder.deployUrl != null && Builder.deployId != null) {
                     spigotArguments.add("deploy");
                     spigotArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::default::" + Builder.deployUrl);
+                } else {
+                    spigotArguments.add("install");
                 }
+                
                 runMaven( spigot, spigotArguments.toArray(new String[0]));
 
                 System.out.println("Compiling Spigot API");
@@ -770,11 +773,11 @@ public class Builder
                     spigotApiArguments.add("source:jar");
                 }
     
-                spigotApiArguments.add("install");
-    
                 if(Builder.deployUrl != null && Builder.deployId != null) {
                     spigotApiArguments.add("deploy");
                     spigotApiArguments.add("-DaltDeploymentRepository=" + Builder.deployId + "::default::" + Builder.deployUrl);
+                } else {
+                    spigotApiArguments.add("install");
                 }
                 
                 File spigotApi = new File( spigot, "Spigot-API" );

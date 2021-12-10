@@ -660,7 +660,7 @@ public class Builder {
             }
             
             String[] bukkitCommandArgs = bukkitCommandList.toArray(new String[0]);
-            runMaven(buildData, bukkitCommandArgs);
+            runMaven(bukkit, bukkitCommandArgs);
             
             System.out.println("Compiling CraftBukkit...");
             List<String> craftBukkitCommandList = new ArrayList<>();

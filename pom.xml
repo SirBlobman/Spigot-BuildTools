@@ -19,6 +19,15 @@
     </properties>
 
     <dependencies>
+        <!-- Project Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.22</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Java Diff Utils Copy -->
         <dependency>
             <groupId>com.custardsource.dybdob</groupId>
             <artifactId>java-diff-utils-copy</artifactId>
@@ -31,42 +40,48 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <!-- Guava -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>31.0.1-jre</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- JOpt Simple -->
         <dependency>
             <groupId>net.sf.jopt-simple</groupId>
             <artifactId>jopt-simple</artifactId>
             <version>5.0.4</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- Eclipse JGit -->
         <dependency>
             <groupId>org.eclipse.jgit</groupId>
             <artifactId>org.eclipse.jgit</artifactId>
             <version>5.13.0.202109080827-r</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- SLF4J JDK14+ -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
-            <version>1.7.30</version>
+            <version>1.7.32</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.20</version>
-            <scope>provided</scope>
-        </dependency>
+
+        <!-- Commons I/O -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- GSON -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

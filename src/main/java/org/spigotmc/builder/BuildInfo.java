@@ -5,20 +5,18 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class BuildInfo
-{
-
+public class BuildInfo {
+    
     private String name;
     private String description;
     private int toolsVersion = -1;
     private int[] javaVersions;
     private Refs refs;
-
+    
     @Data
     @AllArgsConstructor
-    public static class Refs
-    {
-
+    public static class Refs {
+        
         private String BuildData;
         private String Bukkit;
         private String CraftBukkit;

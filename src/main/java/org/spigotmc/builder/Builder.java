@@ -492,7 +492,14 @@ public class Builder
                 {
                     memberMappings = new File( workDir, "bukkit-" + mappingsVersion + "-members.csrg" );
                     mapUtil.makeFieldMaps( mojangMappings, memberMappings, true );
+                } else if ( !fieldMappings.exists() )
+                {
+                    mapUtil.makeFieldMaps( mojangMappings, fieldMappings, false );
+                }
 
+                // 1.17+
+                if ( memberMappings.exists() )
+                {
                     runMaven( CWD, "install:install-file", "-Dfile=" + memberMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-members", "-DgeneratePom=false" );
                     deployFiles.add(memberMappings.toString());
@@ -506,8 +513,6 @@ public class Builder
                     deployTypes.add("csrg");
                 } else if ( !fieldMappings.exists() )
                 {
-                    mapUtil.makeFieldMaps( mojangMappings, fieldMappings, false );
-
                     runMaven( CWD, "install:install-file", "-Dfile=" + fieldMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-fields", "-DgeneratePom=false" );
                     deployFiles.add(fieldMappings.toString());
@@ -527,6 +532,7 @@ public class Builder
                     deployTypes.add("csrg");
                 }
 
+                // 1.17+
                 runMaven( CWD, "install:install-file", "-Dfile=" + mojangMappings, "-Dpackaging=txt", "-DgroupId=org.spigotmc",
                         "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-mojang", "-DgeneratePom=false" );
                 deployFiles.add(mojangMappings.toString());

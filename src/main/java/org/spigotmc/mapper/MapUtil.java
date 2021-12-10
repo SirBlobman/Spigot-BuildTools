@@ -1,8 +1,5 @@
 package org.spigotmc.mapper;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 public class MapUtil {
     

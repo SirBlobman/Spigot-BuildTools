@@ -1,20 +1,5 @@
 package org.spigotmc.builder;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.ObjectArrays;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.CharStreams;
-import com.google.common.io.Files;
-import com.google.common.io.Resources;
-import com.google.gson.Gson;
-import difflib.DiffUtils;
-import difflib.Patch;
-
 import java.awt.Desktop;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -59,6 +44,20 @@ import javax.net.ssl.X509TrustManager;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.ObjectArrays;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
+import com.google.common.io.Files;
+import com.google.common.io.Resources;
+import com.google.gson.Gson;
+import difflib.DiffUtils;
+import difflib.Patch;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -76,7 +75,6 @@ import org.eclipse.jgit.transport.FetchResult;
 import org.spigotmc.mapper.MapUtil;
 
 public class Builder {
-    
     public static final String LOG_FILE = "BuildTools.log.txt";
     public static final boolean IS_WINDOWS = System.getProperty("os.name").startsWith("Windows");
     public static final File CWD = new File(".");

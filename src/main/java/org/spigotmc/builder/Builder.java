@@ -518,10 +518,16 @@ public class Builder {
         
         // Deploy Code
         if(deploy) {
-            runMaven(CWD, "deploy:deploy-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
-                    "-DartifactId=minecraft-server", "-Dversion=" + (versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT"),
-                    "-Durl=" + deployUrl, "-DrepositoryId=" + deployRepositoryId, "-Dfiles=" + String.join(",", deployFiles),
-                    "-Dclassifiers=" + String.join(",", deployClassifiers), "-Dtypes=" + String.join(",", deployTypes));
+            if(!deployFiles.isEmpty()) {
+                runMaven(CWD, "deploy:deploy-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
+                        "-DartifactId=minecraft-server", "-Dversion=" + (versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT"),
+                        "-Durl=" + deployUrl, "-DrepositoryId=" + deployRepositoryId, "-Dfiles=" + String.join(",", deployFiles),
+                        "-Dclassifiers=" + String.join(",", deployClassifiers), "-Dtypes=" + String.join(",", deployTypes));
+            } else {
+                runMaven(CWD, "deploy:deploy-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
+                        "-DartifactId=minecraft-server", "-Dversion=" + (versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT"),
+                        "-Durl=" + deployUrl, "-DrepositoryId=" + deployRepositoryId);
+            }
         }
         
         File decompileDir = new File(workDir, "decompile-" + mappingsVersion);

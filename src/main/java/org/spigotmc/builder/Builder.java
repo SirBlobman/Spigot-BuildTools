@@ -27,6 +27,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -93,6 +94,11 @@ public class Builder {
     private static File msysDir;
     private static File maven;
     
+    // Deploy Feature
+    private static boolean deploy;
+    private static String deployRepositoryId;
+    private static URL deployUrl;
+    
     public static void main(String[] args) throws Exception {
         logOutput();
         
@@ -151,15 +157,28 @@ public class Builder {
         }).withValuesSeparatedBy(',');
         OptionSpec<Void> compileIfChanged = parser.accepts("compile-if-changed", "Run BuildTools only when changes are detected in the repository");
         
+        // Deploy Code
+        OptionSpec<String> deployIdOption = parser.accepts("deploy-id", "Custom maven repository ID")
+                .withRequiredArg().ofType(String.class);
+        OptionSpec<URL> deployUrlOption = parser.accepts("deploy-url", "Custom maven repository URL")
+                .withRequiredArg().ofType(URL.class);
+        
         OptionSet options = parser.parse(args);
+        if(options.has(deployIdOption) && options.has(deployUrlOption)) {
+            deploy = true;
+            deployRepositoryId = options.valueOf(deployIdOption);
+            deployUrl = options.valueOf(deployUrlOption);
+        }
         
         if(options.has(help)) {
             parser.printHelpOn(System.out);
             System.exit(0);
         }
+        
         if(options.has(disableCertFlag)) {
             disableHttpsCertificateCheck();
         }
+        
         dontUpdate = options.has(dontUpdateFlag);
         generateSource = options.has(generateSourceFlag);
         generateDocs = options.has(generateDocsFlag);
@@ -170,6 +189,7 @@ public class Builder {
             compile = Collections.singletonList(Compile.NONE);
             System.err.println("--skip-compile is deprecated, please use --compile NONE");
         }
+        
         if((dev || dontUpdate) && options.has(jenkinsVersion)) {
             System.err.println("Using --dev or --dont-update with --rev makes no sense, exiting.");
             System.exit(1);
@@ -401,6 +421,11 @@ public class Builder {
         }
         String mappingsVersion = mappingsHash.hash().toString().substring(24); // Last 8 chars
         
+        // Deploy Code
+        List<String> deployFiles = new ArrayList<>();
+        List<String> deployClassifiers = new ArrayList<>();
+        List<String> deployTypes = new ArrayList<>();
+        
         File finalMappedJar = new File(workDir, "mapped." + mappingsVersion + ".jar");
         if(!finalMappedJar.exists()) {
             System.out.println("Final mapped jar: " + finalMappedJar + " does not exist, creating (please wait)!");
@@ -427,12 +452,18 @@ public class Builder {
                 if(memberMappings.exists()) {
                     runMaven(CWD, "install:install-file", "-Dfile=" + memberMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-members", "-DgeneratePom=false");
+                    deployFiles.add(memberMappings.toString());
+                    deployClassifiers.add("maps-spigot-members");
+                    deployTypes.add("csrg");
                 }
                 
                 // 1.17
                 if(fieldMappings.exists()) {
                     runMaven(CWD, "install:install-file", "-Dfile=" + fieldMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-fields", "-DgeneratePom=false");
+                    deployFiles.add(fieldMappings.toString());
+                    deployClassifiers.add("maps-spigot-fields");
+                    deployTypes.add("csrg");
                     
                     File combinedMappings = new File(workDir, "bukkit-" + mappingsVersion + "-combined.csrg");
                     if(!combinedMappings.exists()) {
@@ -441,15 +472,24 @@ public class Builder {
                     
                     runMaven(CWD, "install:install-file", "-Dfile=" + combinedMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot", "-DgeneratePom=false");
+                    deployFiles.add(combinedMappings.toString());
+                    deployClassifiers.add("maps-spigot");
+                    deployTypes.add("csrg");
                 } else {
                     // 1.18+
                     runMaven(CWD, "install:install-file", "-Dfile=" + classMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot", "-DgeneratePom=false");
+                    deployFiles.add(classMappings.toString());
+                    deployClassifiers.add("maps-spigot");
+                    deployTypes.add("csrg");
                 }
                 
                 // 1.17+
                 runMaven(CWD, "install:install-file", "-Dfile=" + mojangMappings, "-Dpackaging=txt", "-DgroupId=org.spigotmc",
                         "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-mojang", "-DgeneratePom=false");
+                deployFiles.add(mojangMappings.toString());
+                deployClassifiers.add("maps-mojang");
+                deployTypes.add("txt");
             }
             
             File clMappedJar = new File(finalMappedJar + "-cl");
@@ -475,6 +515,14 @@ public class Builder {
         
         runMaven(CWD, "install:install-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
                 "-DartifactId=minecraft-server", "-Dversion=" + (versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT"));
+        
+        // Deploy Code
+        if(deploy) {
+            runMaven(CWD, "deploy:deploy-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
+                    "-DartifactId=minecraft-server", "-Dversion=" + (versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT"),
+                    "-Durl=" + deployUrl, "-DrepositoryId=" + deployRepositoryId, "-Dfiles=" + String.join(",", deployFiles),
+                    "-Dclassifiers=" + String.join(",", deployClassifiers), "-Dtypes=" + String.join(",", deployTypes));
+        }
         
         File decompileDir = new File(workDir, "decompile-" + mappingsVersion);
         if(!decompileDir.exists()) {
@@ -584,18 +632,43 @@ public class Builder {
                 compile = Collections.singletonList(Compile.SPIGOT);
             }
         }
+        
         if(compile.contains(Compile.CRAFTBUKKIT)) {
-            System.out.println("Compiling Bukkit");
-            runMaven(bukkit, "clean", "install");
+            System.out.println("Compiling Bukkit....");
+            List<String> bukkitCommandList = new ArrayList<>();
+            bukkitCommandList.add("clean");
+            
             if(generateDocs) {
-                runMaven(bukkit, "javadoc:jar");
-            }
-            if(generateSource) {
-                runMaven(bukkit, "source:jar");
+                bukkitCommandList.add("javadoc:jar");
             }
             
-            System.out.println("Compiling CraftBukkit");
-            runMaven(craftBukkit, "clean", "install");
+            if(generateSource) {
+                bukkitCommandList.add("source:jar");
+            }
+            
+            if(deploy) {
+                bukkitCommandList.add("deploy");
+                bukkitCommandList.add("-DaltDeploymentRepository=" + deployRepositoryId + "::default::" + deployUrl);
+            } else {
+                bukkitCommandList.add("install");
+            }
+            
+            String[] bukkitCommandArgs = bukkitCommandList.toArray(new String[0]);
+            runMaven(buildData, bukkitCommandArgs);
+            
+            System.out.println("Compiling CraftBukkit...");
+            List<String> craftBukkitCommandList = new ArrayList<>();
+            craftBukkitCommandList.add("clean");
+    
+            if(deploy) {
+                craftBukkitCommandList.add("deploy");
+                craftBukkitCommandList.add("-DaltDeploymentRepository=" + deployRepositoryId + "::default::" + deployUrl);
+            } else {
+                craftBukkitCommandList.add("install");
+            }
+            
+            String[] craftBukkitCommandArgs = craftBukkitCommandList.toArray(new String[0]);
+            runMaven(craftBukkit, craftBukkitCommandArgs);
         }
         
         try {
@@ -603,16 +676,42 @@ public class Builder {
             System.out.println("*** Spigot patches applied!");
             
             if(compile.contains(Compile.SPIGOT)) {
+                System.out.println("Compiling Spigot and Spigot-API...");
+                List<String> spigotCommandList = new ArrayList<>();
+                spigotCommandList.add("clean");
+    
+                if(deploy) {
+                    spigotCommandList.add("deploy");
+                    spigotCommandList.add("-DaltDeploymentRepository=" + deployRepositoryId + "::default::" + deployUrl);
+                } else {
+                    spigotCommandList.add("install");
+                }
+    
+                String[] spigotCommandArgs = spigotCommandList.toArray(new String[0]);
                 System.out.println("Compiling Spigot & Spigot-API");
-                runMaven(spigot, "clean", "install");
+                runMaven(spigot, spigotCommandArgs);
+    
+                List<String> spigotApiCommandList = new ArrayList<>();
+                spigotApiCommandList.add("clean");
+    
+                if(generateDocs) {
+                    spigotApiCommandList.add("javadoc:jar");
+                }
+    
+                if(generateSource) {
+                    spigotApiCommandList.add("source:jar");
+                }
+    
+                if(deploy) {
+                    spigotApiCommandList.add("deploy");
+                    spigotApiCommandList.add("-DaltDeploymentRepository=" + deployRepositoryId + "::default::" + deployUrl);
+                } else {
+                    spigotApiCommandList.add("install");
+                }
                 
                 File spigotApi = new File(spigot, "Spigot-API");
-                if(generateDocs) {
-                    runMaven(spigotApi, "javadoc:jar");
-                }
-                if(generateSource) {
-                    runMaven(spigotApi, "source:jar");
-                }
+                String[] spigotApiCommandArgs = spigotApiCommandList.toArray(new String[0]);
+                runMaven(spigotApi, spigotApiCommandArgs);
             }
         } catch(Exception ex) {
             System.err.println("Error compiling Spigot. Please check the wiki for FAQs.");

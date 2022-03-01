@@ -6,7 +6,7 @@ public final class Bootstrap {
         if(javaVersion.isUnknown()) {
             printError("*** WARNING *** Unsupported Java detected (" + System.getProperty("java.class.version")
                     + ").");
-            printError("*** WARNING *** BuildTools has only been tested up to Java 16. "
+            printError("*** WARNING *** BuildTools has only been tested up to Java 17. "
                     + "Use of development Java versions is not supported.");
             printError("*** WARNING *** You may use 'java -version' to double check your Java version.");
         }

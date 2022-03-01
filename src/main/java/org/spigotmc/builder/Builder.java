@@ -765,7 +765,7 @@ public class Builder {
         } else if(versionInfo.getMinecraftHash() != null) {
             return checkHash(vanillaJar, HashFormat.MD5, versionInfo.getMinecraftHash());
         } else {
-            return true;
+            return vanillaJar.isFile();
         }
     }
     

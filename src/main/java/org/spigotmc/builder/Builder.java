@@ -758,13 +758,17 @@ public class Builder {
             copyJar("Spigot/Spigot-Server/target", "spigot", suffix, new File(outputDir.value(options), "spigot-" + versionInfo.getMinecraftVersion() + ".jar"));
         }
     }
-    
-    private static boolean checkHash(File vanillaJar, VersionInfo versionInfo) throws IOException {
-        if(versionInfo.getShaServerHash() != null) {
-            return checkHash(vanillaJar, HashFormat.SHA1, versionInfo.getShaServerHash());
-        } else if(versionInfo.getMinecraftHash() != null) {
-            return checkHash(vanillaJar, HashFormat.MD5, versionInfo.getMinecraftHash());
-        } else {
+
+    private static boolean checkHash(File vanillaJar, VersionInfo versionInfo) throws IOException
+    {
+        if ( versionInfo.getShaServerHash() != null )
+        {
+            return checkHash( vanillaJar, HashFormat.SHA1, versionInfo.getShaServerHash() );
+        } else if ( versionInfo.getMinecraftHash() != null )
+        {
+            return checkHash( vanillaJar, HashFormat.MD5, versionInfo.getMinecraftHash() );
+        } else
+        {
             return vanillaJar.isFile();
         }
     }

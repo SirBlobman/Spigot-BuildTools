@@ -3,12 +3,11 @@ package org.spigotmc.builder;
 public final class Bootstrap {
     public static void main(String[] args) throws Exception {
         JavaVersion javaVersion = JavaVersion.getCurrentVersion();
-        if(javaVersion.isUnknown()) {
-            printError("*** WARNING *** Unsupported Java detected (" + System.getProperty("java.class.version")
-                    + ").");
-            printError("*** WARNING *** BuildTools has only been tested up to Java 17. "
-                    + "Use of development Java versions is not supported.");
-            printError("*** WARNING *** You may use 'java -version' to double check your Java version.");
+
+        if ( javaVersion.isUnknown() )
+        {
+            System.err.println( "*** WARNING *** Unsupported Java detected (" + System.getProperty( "java.class.version" ) + "). BuildTools has only been tested up to Java 18. Use of development Java versions is not supported." );
+            System.err.println( "*** WARNING *** You may use java -version to double check your Java version." );
         }
         
         long memoryBytes = Runtime.getRuntime().maxMemory();

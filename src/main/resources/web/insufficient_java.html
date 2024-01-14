@@ -1,0 +1,59 @@
+<!--NOTE: Java Swing uses the HTML4 standard. Not HTML5-->
+<html>
+  %STYLESHEET%
+
+  <body>
+    <div>
+      <p>BuildTools could not find the necessary Java Executable to build %VERSION%.</p>
+      <p>%JAVA_VERSION_MIN% or %JAVA_VERSION_MAX% is required to build %VERSION%.</p>
+      <p></p>
+      <p>You can download the necessary version using one of the following links.</p>
+      <p>The provided links have downloads for all operating systems.</p>
+    </div>
+
+    <p></p>
+    <p>Make sure you install the executable file and not the .zip / .tar.gz!</p>
+    <p>Windows (.exe / .msi)</p>
+    <p>Mac (.dmg / .pkg)</p>
+    <p>Linux (.deb / .rpm)</p>
+
+    <p></p>
+
+    <div>
+      <h3>OpenJDK</h3>
+      <a href="%OPENJDK_LINK%">%OPENJDK_LINK%</a>
+    </div>
+
+    <p></p>
+
+    <div>
+      <h3>Azul</h3>
+      <a href="%AZUL_LINK%">%AZUL_LINK%</a>
+    </div>
+
+    <p></p>
+
+    <div>
+      <h3>Oracle</h3>
+      <a href="%ORACLE_LINK%">%ORACLE_LINK%</a>
+    </div>
+
+    <p></p>
+
+    <div>
+      <p>Once you have installed the necessary java version, please restart BuildTools and try again.</p>
+    </div>
+
+    <p></p>
+
+    <div>
+      <p>If you believe this error to be a mistake and already have the required java version installed, please follow these instructions:</p>
+      <p></p>
+      <p>1. Go to the Options tab</p>
+      <p>2. Enable the `Override Java Executable` checkbox.</p>
+      <p>3. Provide the correct java path.</p>
+      <p>4. Try again. :)</p>
+    </div>
+  </body>
+
+</html>

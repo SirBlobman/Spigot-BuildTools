@@ -17,7 +17,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import difflib.DiffUtils;
 import difflib.Patch;
-import java.awt.Desktop;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -32,7 +31,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.FileSystem;
@@ -61,8 +59,6 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
@@ -80,13 +76,14 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.spigotmc.mapper.MapUtil;
+import org.spigotmc.utils.Constants;
 
 public class Builder
 {
 
-    public static final String LOG_FILE = "BuildTools.log.txt";
+    public static final String LOG_FILE = Constants.LOG_FILE;
     public static final boolean IS_WINDOWS = System.getProperty( "os.name" ).startsWith( "Windows" );
-    public static final File CWD = new File( "." );
+    public static File CWD = new File( "." );
     private static final boolean autocrlf = !"\n".equals( System.getProperty( "line.separator" ) );
     private static boolean dontUpdate;
     private static List<Compile> compile;
@@ -105,7 +102,7 @@ public class Builder
 
     public static void main(String[] args) throws Exception
     {
-        logOutput();
+        System.out.println( Arrays.toString( args ) );
 
         // May be null
         String buildVersion = Builder.class.getPackage().getImplementationVersion();
@@ -130,27 +127,14 @@ public class Builder
 
         if ( CWD.getAbsolutePath().contains( "'" ) || CWD.getAbsolutePath().contains( "#" ) || CWD.getAbsolutePath().contains( "~" ) || CWD.getAbsolutePath().contains( "(" ) || CWD.getAbsolutePath().contains( ")" ) )
         {
-            System.err.println( "Please do not run in a path with special characters!" );
-            return;
+            System.err.println( Constants.SPECIAL_CHARACTERS_WARNING );
+            System.exit(1);
         }
 
         if ( CWD.getAbsolutePath().contains( "Dropbox" ) || CWD.getAbsolutePath().contains( "OneDrive" ) )
         {
-            System.err.println( "Please do not run BuildTools in a Dropbox, OneDrive, or similar. You can always copy the completed jars there later." );
-            return;
-        }
-
-        if ( false && System.console() == null )
-        {
-            JFrame jFrame = new JFrame();
-            jFrame.setTitle( "SpigotMC - BuildTools" );
-            jFrame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-            jFrame.getContentPane().add( new JLabel( "You have to run BuildTools through bash (msysgit). Please read our wiki." ) );
-            jFrame.pack();
-            jFrame.setVisible( true );
-
-            Desktop.getDesktop().browse( new URI( "https://www.spigotmc.org/wiki/buildtools/" ) );
-            return;
+            System.err.println( Constants.NON_STANDARD_PATH_WARNING );
+            System.exit(1);
         }
 
         OptionParser parser = new OptionParser();
@@ -165,12 +149,14 @@ public class Builder
         OptionSpec<Void> experimentalFlag = parser.accepts( "experimental", "Build experimental version" );
         OptionSpec<Void> remappedFlag = parser.accepts( "remapped", "Produce and install extra remapped jars" );
         OptionSpec<File> outputDir = parser.acceptsAll( Arrays.asList( "o", "output-dir" ), "Final jar output directory" ).withRequiredArg().ofType( File.class ).defaultsTo( CWD );
+        OptionSpec<String> outputName = parser.accepts( "final-name", "Name of the final jar" ).withRequiredArg();
         OptionSpec<String> jenkinsVersion = parser.accepts( "rev", "Version to build" ).withRequiredArg().defaultsTo( "latest" );
         OptionSpec<Compile> toCompile = parser.accepts( "compile", "Software to compile" ).withRequiredArg().ofType( Compile.class ).withValuesConvertedBy( new EnumConverter<Compile>( Compile.class )
         {
         } ).withValuesSeparatedBy( ',' );
         OptionSpec<Void> compileIfChanged = parser.accepts( "compile-if-changed", "Run BuildTools only when changes are detected in the repository" );
         OptionSpec<PullRequest> buildPullRequest = parser.acceptsAll( Arrays.asList( "pull-request", "pr" ), "Build specific pull requests" ).withOptionalArg().withValuesConvertedBy( new PullRequest.PullRequestConverter() );
+        parser.accepts( "nogui", "Disable the GUI" );
 
         OptionSet options = parser.parse( args );
 
@@ -413,8 +399,8 @@ public class Builder
             if ( !buildDataChanged && !bukkitChanged && !craftBukkitChanged && !spigotChanged && options.has( compileIfChanged ) && !didClone )
             {
                 System.out.println( "*** No changes detected in any of the repositories!" );
-                System.out.println( "*** Exiting due to the --compile-if-changes" );
-                System.exit( 0 );
+                System.out.println( "*** Exiting due to the --compile-if-changed" );
+                System.exit( 2 );
             }
         }
 
@@ -754,7 +740,7 @@ public class Builder
         } catch ( Exception ex )
         {
             System.err.println( "Error compiling Spigot. Please check the wiki for FAQs." );
-            System.err.println( "If this does not resolve your issue then please pastebin the entire BuildTools.log.txt file when seeking support." );
+            System.err.println( "If this does not resolve your issue then please pastebin the entire " + LOG_FILE + " file when seeking support." );
             ex.printStackTrace();
             System.exit( 1 );
         }
@@ -766,17 +752,38 @@ public class Builder
 
         System.out.println( "Success! Everything completed successfully. Copying final .jar files now." );
 
+        String fileExtension = ".jar";
+        String snapshot = "-SNAPSHOT";
+        String experimental = "-experimental";
+
         String base = ( versionInfo.getSpigotVersion() != null ) ? "-" + versionInfo.getSpigotVersion() : "";
         String bootstrap = ( versionInfo.getToolsVersion() >= 138 ) ? "-bootstrap" : "";
-        String suffix = base + bootstrap + ".jar";
+        String suffix = base + bootstrap + fileExtension;
+
+        String finalName = "spigot-" + versionInfo.getMinecraftVersion() + fileExtension;
+
+        if ( options.has( experimentalFlag ) )
+        {
+            suffix = versionInfo.getMinecraftVersion() + experimental + snapshot + bootstrap + fileExtension;
+            finalName = "spigot-" + versionInfo.getMinecraftVersion() + experimental + fileExtension;
+        }
+
+        if ( outputName.value( options ) != null )
+        {
+            finalName = outputName.value( options );
+        }
+
         if ( compile.contains( Compile.CRAFTBUKKIT ) && ( versionInfo.getToolsVersion() < 101 || versionInfo.getToolsVersion() > 104 ) )
         {
             copyJar( "CraftBukkit/target", "craftbukkit", suffix, new File( outputDir.value( options ), "craftbukkit-" + versionInfo.getMinecraftVersion() + ".jar" ) );
         }
+
         if ( compile.contains( Compile.SPIGOT ) )
         {
-            copyJar( "Spigot/Spigot-Server/target", "spigot", suffix, new File( outputDir.value( options ), "spigot-" + versionInfo.getMinecraftVersion() + ".jar" ) );
+            copyJar( "Spigot/Spigot-Server/target", "spigot", suffix, new File( outputDir.value( options ), finalName ) );
         }
+
+        System.exit( 0 );
     }
 
     private static boolean checkHash(File vanillaJar, VersionInfo versionInfo) throws IOException
@@ -819,11 +826,11 @@ public class Builder
         }
     }
 
-    public static final String get(String url) throws IOException
+    public static String get(String url) throws IOException
     {
         URLConnection con = new URL( url ).openConnection();
-        con.setConnectTimeout( 30000 );
-        con.setReadTimeout( 30000 );
+        con.setConnectTimeout( Constants.GENERAL_TIMEOUT_MS );
+        con.setReadTimeout( Constants.GENERAL_TIMEOUT_MS );
 
         try ( InputStreamReader r = new InputStreamReader( con.getInputStream() ) )
         {
@@ -842,7 +849,7 @@ public class Builder
 
         for ( File file : files )
         {
-            System.out.println( "Copying " + file.getName() + " to " + outJar.getAbsolutePath() );
+            System.out.println( "Copying " + file.getName() + " to " + outJar.getCanonicalPath() );
             Files.copy( file, outJar );
             System.out.println( "  - Saved as " + outJar );
         }
@@ -1253,11 +1260,11 @@ public class Builder
         }
     }
 
-    public static void logOutput()
+    public static void logOutput(OutputStream defaultOut, OutputStream defaultError)
     {
         try
         {
-            final OutputStream logOut = new BufferedOutputStream( new FileOutputStream( LOG_FILE ) );
+            final OutputStream logOut = new BufferedOutputStream( new FileOutputStream( new File( CWD, LOG_FILE ) ) );
 
             Runtime.getRuntime().addShutdownHook( new Thread()
             {
@@ -1276,8 +1283,8 @@ public class Builder
                 }
             } );
 
-            System.setOut( new PrintStream( new TeeOutputStream( System.out, logOut ) ) );
-            System.setErr( new PrintStream( new TeeOutputStream( System.err, logOut ) ) );
+            System.setOut( new PrintStream( new TeeOutputStream( defaultOut, logOut ) ) );
+            System.setErr( new PrintStream( new TeeOutputStream( defaultError, logOut ) ) );
         } catch ( FileNotFoundException ex )
         {
             System.err.println( "Failed to create log file: " + LOG_FILE );

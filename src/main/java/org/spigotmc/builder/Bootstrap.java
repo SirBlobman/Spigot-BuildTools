@@ -1,12 +1,38 @@
 package org.spigotmc.builder;
 
 import com.google.common.base.Joiner;
+import java.awt.GraphicsEnvironment;
+import org.spigotmc.gui.BuildToolsGui;
+import org.spigotmc.utils.SwingUtils;
+import org.spigotmc.utils.Utils;
 
 public class Bootstrap
 {
 
+    private static boolean guiEnabled = false;
+
     public static void main(String[] args) throws Exception
     {
+        if ( args.length == 0 )
+        {
+            if ( !Utils.isRanFromCommandLine() )
+            {
+                if ( !GraphicsEnvironment.isHeadless() )
+                {
+                    guiEnabled = true;
+
+                    SwingUtils.applyInitialTheme();
+
+                    BuildToolsGui gui = new BuildToolsGui();
+                    gui.setLocationRelativeTo( null );
+                    gui.setVisible( true );
+                } else
+                {
+                    System.err.println( "Headless environment detected, BuildTools GUI unavailable." );
+                }
+            }
+        }
+
         JavaVersion javaVersion = JavaVersion.getCurrentVersion();
 
         if ( javaVersion.isUnknown() )
@@ -24,6 +50,10 @@ public class Bootstrap
             System.exit( 1 );
         }
 
-        Builder.main( args );
+        if ( !guiEnabled )
+        {
+            Builder.logOutput( System.out, System.err );
+            Builder.main( args );
+        }
     }
 }

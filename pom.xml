@@ -9,7 +9,12 @@
     <version>1.0-SNAPSHOT</version>
 
     <name>BuildTools</name>
-    <description></description>
+    <description>Build Spigot!</description>
+    <organization>
+        <name>SpigotMC Pty Ltd</name>
+        <url>https://www.spigotmc.org/</url>
+    </organization>
+    <inceptionYear>2014</inceptionYear>
 
     <properties>
         <build.number>unknown</build.number>
@@ -73,6 +78,18 @@
             <version>2.10.1</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>3.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.jeff-media</groupId>
+            <artifactId>javafinder</artifactId>
+            <version>1.4.2</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -130,6 +147,12 @@
                                 <exclude>**/*.DSA</exclude>
                             </excludes>
                         </filter>
+                        <filter>
+                            <artifact>com.formdev:flatlaf</artifact>
+                            <includes>
+                                <include>**</include>
+                            </includes>
+                        </filter>
                     </filters>
                     <minimizeJar>true</minimizeJar>
                 </configuration>
@@ -156,4 +179,84 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>windows-exe</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                        <artifactId>launch4j-maven-plugin</artifactId>
+                        <version>2.4.1</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>launch4j</goal>
+                                </goals>
+                                <configuration>
+                                    <headerType>gui</headerType>
+                                    <classPath>
+                                        <mainClass>org.spigotmc.gui.BuildToolsGui</mainClass>
+                                    </classPath>
+                                    <jre>
+                                        <minVersion>1.8.0</minVersion>
+                                        <path>%JAVA_HOME%;%PATH%</path>
+                                    </jre>
+                                    <icon>src/main/exe/logo.ico</icon>
+                                    <splash>
+                                        <!-- The image file (.bmp extension only) needs to be encoded in 24-bit color or lower. -->
+                                        <!-- This does not work with 32-bit color files. -->
+                                        <file>src/main/exe/splash.bmp</file>
+                                        <timeout>30</timeout>
+                                        <waitForWindow>true</waitForWindow>
+                                    </splash>
+                                    <outfile>${project.build.directory}/${project.build.finalName}.exe</outfile>
+                                    <versionInfo>
+                                        <txtFileVersion>${describe}</txtFileVersion>
+                                        <txtProductVersion>${describe}</txtProductVersion>
+                                    </versionInfo>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>macos-dmg</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>de.perdian.maven.plugins</groupId>
+                        <artifactId>macosappbundler-maven-plugin</artifactId>
+                        <version>1.20.1</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>bundle</goal>
+                                </goals>
+                                <configuration>
+                                    <app>
+                                        <includeDependencies>false</includeDependencies>
+                                    </app>
+                                    <dmg>
+                                        <generate>true</generate>
+                                        <useGenIsoImage>true</useGenIsoImage>
+                                        <autoFallback>true</autoFallback>
+                                        <appendVersion>false</appendVersion>
+                                    </dmg>
+                                    <plist>
+                                        <JVMMainClassName>org.spigotmc.gui.BuildToolsGui</JVMMainClassName>
+                                    </plist>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -91,19 +91,7 @@ public class Utils {
     }
 
     public static boolean isRanFromCommandLine() {
-        // If a console is available, we're definitely running from command line.
-        if (System.console() != null) {
-            return true;
-        }
-
-        // Naive check for running from command line on Windows.
-        // If ran from command line or inside most IDEs, the SESSIONNAME environment variable will be set to "Console".
-        // It will be unset when double-clicking the .jar or when using other OSes
-        if ("Console".equals(System.getenv("SESSIONNAME"))) {
-            return true;
-        }
-
-        return false;
+       return System.console() != null;
     }
 
     public static boolean isValidPR(String input, Repository repository) {

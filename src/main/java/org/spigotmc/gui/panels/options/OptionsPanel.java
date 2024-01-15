@@ -441,7 +441,7 @@ public class OptionsPanel extends JPanel {
         this.detectJavaButton.setEnabled(false);
         this.javaSelectionButton.setEnabled(false);
         buildSettings.setOverrideJavaExecutable(false);
-        buildData.updateJavaExecutable(buildSettings);
+        buildData.updateJavaExecutable(buildSettings, false);
     }
 
     // Text Fields

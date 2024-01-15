@@ -193,7 +193,7 @@ public class SettingsPanel extends JPanel implements Lockable, Themeable {
 
         buildSettings.setVersion(selected);
         if (!buildSettings.isOverrideJavaExecutable()) {
-            buildData.updateJavaExecutable(buildSettings);
+            buildData.updateJavaExecutable(buildSettings, false);
         }
 
         consolePane.updateConsoleAreaText(buildData.generatePreCompilationText(buildSettings));

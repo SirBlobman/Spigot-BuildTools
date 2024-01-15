@@ -1,6 +1,7 @@
 package org.spigotmc.gui.panels.general;
 
 import java.io.File;
+import java.util.concurrent.ExecutionException;
 import org.spigotmc.gui.BuildToolsProcess;
 import org.spigotmc.gui.attributes.Lockable;
 import org.spigotmc.gui.data.BuildSettings;
@@ -149,6 +150,15 @@ public class GeneralPanel extends JPanel implements Lockable {
     }
 
     private void buildButtonActionPerformed(ActionEvent event) {
+        try {
+            if (!buildData.updateJavaExecutable(buildSettings, true).get()) {
+                return;
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            MessageModal.displayError(Utils.getReadableStacktrace(e));
+            return;
+        }
+
         cancelButton.setEnabled(true);
         consolePane.updateConsoleAreaText(new ArrayList<>());
 

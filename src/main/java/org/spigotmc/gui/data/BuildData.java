@@ -95,7 +95,7 @@ public final class BuildData {
      *
      * @param buildSettings the buildSettings used to get the current selected spigot version
      */
-    public void updateJavaExecutable(final BuildSettings buildSettings) {
+    public CompletableFuture<Boolean> updateJavaExecutable(final BuildSettings buildSettings, boolean showModal) {
         String checkVersion = buildSettings.getVersion();
         if (checkVersion.equals("experimental")) {
             String mostRecent = versions.get(2);
@@ -106,12 +106,7 @@ public final class BuildData {
             checkVersion = mostRecent;
         }
 
-        builds.get(checkVersion).whenComplete((BuildInfo info, Throwable throwable) -> {
-            if (throwable != null) {
-                MessageModal.displayError(Utils.getReadableStacktrace(throwable));
-                return;
-            }
-
+        return builds.get(checkVersion).thenApply((BuildInfo info) -> {
             if (info.getJavaVersions() == null) {
                 info.setJavaVersions(new int[]{
                         JavaVersion.JAVA_7.getVersion(),
@@ -125,7 +120,7 @@ public final class BuildData {
             final JavaInstallation primary = javaInstallationManager.getPrimaryInstallation();
             if (primary.getVersion().getClassFileMajorVersion() >= min.getVersion() && primary.getVersion().getClassFileMajorVersion() <= max.getVersion()) {
                 javaInstallationManager.setSelectedInstallation(primary);
-                return;
+                return true;
             }
 
             JavaInstallation newInstallation = null;
@@ -143,27 +138,34 @@ public final class BuildData {
             }
 
             if (newInstallation == null) {
-                String style = Utils.getFileContentsFromResource("web/reset.css");
-                String message = Utils.getFileContentsFromResource("web/insufficient_java.html");
-                message = message.replace("%STYLESHEET%", "<style>" + style + "</style>");
-                message = message.replace("%JAVA_VERSION_MIN%", min.getName());
-                message = message.replace("%JAVA_VERSION_MAX%", max.getName());
-                message = message.replace("%VERSION%", buildSettings.getVersion());
-                message = message.replace("%OPENJDK_LINK%", Constants.DOWNLOAD_OPENJDK);
-                message = message.replace("%AZUL_LINK%", Constants.DOWNLOAD_AZUL);
-                message = message.replace("%ORACLE_LINK%", Constants.DOWNLOAD_ORACLE);
+                if (showModal) {
+                    String style = Utils.getFileContentsFromResource("web/reset.css");
+                    String message = Utils.getFileContentsFromResource("web/insufficient_java.html");
+                    message = message.replace("%STYLESHEET%", "<style>" + style + "</style>");
+                    message = message.replace("%JAVA_VERSION_MIN%", min.getName());
+                    message = message.replace("%JAVA_VERSION_MAX%", max.getName());
+                    message = message.replace("%VERSION%", buildSettings.getVersion());
+                    message = message.replace("%OPENJDK_LINK%", Constants.DOWNLOAD_OPENJDK);
+                    message = message.replace("%AZUL_LINK%", Constants.DOWNLOAD_AZUL);
+                    message = message.replace("%ORACLE_LINK%", Constants.DOWNLOAD_ORACLE);
 
-                MessageModal.displayError(message);
-                return;
+                    MessageModal.displayError(message);
+                }
+                return false;
             }
 
             javaInstallationManager.setSelectedInstallation(newInstallation);
+            return true;
+        }).whenComplete((Boolean completed, Throwable throwable) -> {
+            if (throwable != null) {
+                MessageModal.displayError(Utils.getReadableStacktrace(throwable));
+            }
         });
     }
 
     /**
-    * @return a copy of the versions list.
-    * */
+     * @return a copy of the versions list.
+     */
     public List<String> getVersions() {
         return new ArrayList<>(versions);
     }

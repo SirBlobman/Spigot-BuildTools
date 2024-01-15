@@ -38,6 +38,7 @@ public class GeneralPanel extends JPanel implements Lockable {
 
     private final JButton buildButton = new JButton();
     private final JButton copyLogButton = new JButton();
+    private final JButton cancelButton = new JButton();
     private final JButton debugInfoButton = new JButton();
 
     private final JProgressBar progressBar = new JProgressBar();
@@ -88,6 +89,13 @@ public class GeneralPanel extends JPanel implements Lockable {
         copyLogButton.addActionListener(this::copyLogButtonActionPerformed);
         copyLogButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
+        cancelButton.setText("Cancel");
+        cancelButton.setToolTipText("Terminates the currently running compilation operation");
+        cancelButton.setMargin(new Insets(8, 16, 8, 16));
+        cancelButton.addActionListener(this::cancelButtonActionPerformed);
+        cancelButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        cancelButton.setEnabled(false);
+
         debugInfoButton.setText("Debug Info");
         debugInfoButton.setToolTipText("View the debug panel.");
         debugInfoButton.setMargin(new Insets(8, 16, 8, 16));
@@ -101,6 +109,8 @@ public class GeneralPanel extends JPanel implements Lockable {
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(debugInfoButton)
                     .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cancelButton)
+                    .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(copyLogButton)
                     .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(buildButton))
@@ -131,6 +141,7 @@ public class GeneralPanel extends JPanel implements Lockable {
                     .addGap(8, 8, 8)
                     .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                         .addComponent(debugInfoButton, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cancelButton, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE)
                         .addComponent(copyLogButton, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE)
                         .addComponent(buildButton, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE))));
 
@@ -138,6 +149,7 @@ public class GeneralPanel extends JPanel implements Lockable {
     }
 
     private void buildButtonActionPerformed(ActionEvent event) {
+        cancelButton.setEnabled(true);
         consolePane.updateConsoleAreaText(new ArrayList<>());
 
         progressBar.setIndeterminate(true);
@@ -170,6 +182,7 @@ public class GeneralPanel extends JPanel implements Lockable {
                 throw new RuntimeException(e);
             }
         }).whenComplete((Integer exitValue, Throwable throwable) -> {
+            cancelButton.setEnabled(false);
             buildButton.setText("Compile");
             progressBar.setIndeterminate(false);
             progressBar.setForeground(Constants.ACCENT_COLOR);
@@ -226,6 +239,17 @@ public class GeneralPanel extends JPanel implements Lockable {
     private void copyLogButtonActionPerformed(ActionEvent event) {
         SwingUtils.copyToClipboard(new File(Constants.LOG_FILE));
         SwingUtils.buttonCooldown((AbstractButton) event.getSource(), 3, "Copied To Clipboard");
+    }
+
+    private void cancelButtonActionPerformed(ActionEvent event) {
+        cancelButton.setEnabled(false);
+
+        if (buildProcess == null || buildProcess.getProcess() == null) {
+            return;
+        }
+
+        buildProcess.getProcess().destroy();
+        System.out.println("Compilation terminated by the user");
     }
 
     public SettingsPanel getSettingsPanel() {

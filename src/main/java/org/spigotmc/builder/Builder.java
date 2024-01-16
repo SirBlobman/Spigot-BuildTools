@@ -128,13 +128,13 @@ public class Builder
         if ( CWD.getAbsolutePath().contains( "'" ) || CWD.getAbsolutePath().contains( "#" ) || CWD.getAbsolutePath().contains( "~" ) || CWD.getAbsolutePath().contains( "(" ) || CWD.getAbsolutePath().contains( ")" ) )
         {
             System.err.println( Constants.SPECIAL_CHARACTERS_WARNING );
-            System.exit(1);
+            System.exit( 1 );
         }
 
         if ( CWD.getAbsolutePath().contains( "Dropbox" ) || CWD.getAbsolutePath().contains( "OneDrive" ) )
         {
             System.err.println( Constants.NON_STANDARD_PATH_WARNING );
-            System.exit(1);
+            System.exit( 1 );
         }
 
         OptionParser parser = new OptionParser();
@@ -256,23 +256,6 @@ public class Builder
         {
             System.out.println( "Could not successfully run git. Please ensure it is installed and functioning. " + ex.getMessage() );
             System.exit( 1 );
-        }
-
-        try
-        {
-            runProcess( CWD, "git", "config", "--global", "--includes", "user.name" );
-        } catch ( Exception ex )
-        {
-            System.out.println( "Git name not set, setting it to default value." );
-            runProcess( CWD, "git", "config", "--global", "user.name", "BuildTools" );
-        }
-        try
-        {
-            runProcess( CWD, "git", "config", "--global", "--includes", "user.email" );
-        } catch ( Exception ex )
-        {
-            System.out.println( "Git email not set, setting it to default value." );
-            runProcess( CWD, "git", "config", "--global", "user.email", "unconfigured@null.spigotmc.org" );
         }
 
         try
@@ -1008,6 +991,8 @@ public class Builder
         ProcessBuilder pb = new ProcessBuilder( command );
         pb.directory( workDir );
         pb.environment().put( "JAVA_HOME", System.getProperty( "java.home" ) );
+        pb.environment().put( "GIT_COMMITTER_NAME", "BuildTools" );
+        pb.environment().put( "GIT_COMMITTER_EMAIL", "unconfigured@null.spigotmc.org" );
         pb.environment().remove( "M2_HOME" ); // Just let maven figure this out from where it is invoked
         if ( !pb.environment().containsKey( "MAVEN_OPTS" ) )
         {

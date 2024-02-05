@@ -61,7 +61,6 @@ public final class Constants {
     public static final String VERSION_SCHEME_NORMAL = "spigot-%version%.jar";
     public static final String VERSION_SCHEME_EXPERIMENTAL = "spigot-experimental.jar";
 
-    public static final String NON_STANDARD_PATH_WARNING = "Please do not run BuildTools in a Dropbox, OneDrive, or similar. You can always copy the completed jars there later.";
     public static final String SPECIAL_CHARACTERS_WARNING = "Please do not run BuildTools in a path with special characters!";
     public static final String NOT_RUN_IN_BASH_WARNING = "You have to run BuildTools through bash (msysgit). Please read our wiki.";
 }

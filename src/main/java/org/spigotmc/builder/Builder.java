@@ -133,12 +133,6 @@ public class Builder
             System.exit( 1 );
         }
 
-        if ( CWD.getAbsolutePath().contains( "Dropbox" ) || CWD.getAbsolutePath().contains( "OneDrive" ) )
-        {
-            System.err.println( Constants.NON_STANDARD_PATH_WARNING );
-            System.exit( 1 );
-        }
-
         OptionParser parser = new OptionParser();
         OptionSpec<Void> help = parser.accepts( "help", "Show the help" );
         OptionSpec<Void> disableCertFlag = parser.accepts( "disable-certificate-check", "Disable HTTPS certificate check" );

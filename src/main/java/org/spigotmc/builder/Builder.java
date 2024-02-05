@@ -1,6 +1,5 @@
 package org.spigotmc.builder;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ObjectArrays;
@@ -33,6 +32,7 @@ import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystemException;
 import java.nio.file.FileSystems;
@@ -81,10 +81,12 @@ import org.spigotmc.utils.Constants;
 public class Builder
 {
 
-    public static final String LOG_FILE = Constants.LOG_FILE;
-    public static final boolean IS_WINDOWS = System.getProperty( "os.name" ).startsWith( "Windows" );
     public static File CWD = new File( "." );
-    private static final boolean autocrlf = !"\n".equals( System.getProperty( "line.separator" ) );
+    public static final String LOG_FILE = Constants.LOG_FILE;
+
+    private static final boolean IS_WINDOWS = System.getProperty( "os.name" ).startsWith( "Windows" );
+    private static final boolean AUTOCRLF = !"\n".equals( System.getProperty( "line.separator" ) );
+
     private static boolean dontUpdate;
     private static List<Compile> compile;
     private static boolean generateSource;
@@ -115,7 +117,7 @@ public class Builder
                 try
                 {
                     buildNumber = Integer.parseInt( split[3] );
-                } catch ( NumberFormatException ex )
+                } catch ( NumberFormatException ignored )
                 {
                 }
             }
@@ -123,7 +125,7 @@ public class Builder
 
         System.out.println( "Loading BuildTools version: " + buildVersion + " (#" + buildNumber + ")" );
         System.out.println( "Java Version: " + JavaVersion.getCurrentVersion() );
-        System.out.println( "Current Path: " + CWD.getAbsolutePath() );
+        System.out.println( "Current Path: " + CWD.getCanonicalPath() );
 
         if ( CWD.getAbsolutePath().contains( "'" ) || CWD.getAbsolutePath().contains( "#" ) || CWD.getAbsolutePath().contains( "~" ) || CWD.getAbsolutePath().contains( "(" ) || CWD.getAbsolutePath().contains( ")" ) )
         {
@@ -140,7 +142,7 @@ public class Builder
         OptionParser parser = new OptionParser();
         OptionSpec<Void> help = parser.accepts( "help", "Show the help" );
         OptionSpec<Void> disableCertFlag = parser.accepts( "disable-certificate-check", "Disable HTTPS certificate check" );
-        OptionSpec<Void> disableJavaCheck = parser.accepts( "disable-java-check", "Disable Java version check" );
+        OptionSpec<Void> disableJavaCheckFlag = parser.accepts( "disable-java-check", "Disable Java version check" );
         OptionSpec<Void> dontUpdateFlag = parser.accepts( "dont-update", "Don't pull updates from Git" );
         OptionSpec<Void> skipCompileFlag = parser.accepts( "skip-compile", "Skip compilation" );
         OptionSpec<Void> generateSourceFlag = parser.accepts( "generate-source", "Generate source jar" );
@@ -148,14 +150,14 @@ public class Builder
         OptionSpec<Void> devFlag = parser.accepts( "dev", "Development mode" );
         OptionSpec<Void> experimentalFlag = parser.accepts( "experimental", "Build experimental version" );
         OptionSpec<Void> remappedFlag = parser.accepts( "remapped", "Produce and install extra remapped jars" );
-        OptionSpec<File> outputDir = parser.acceptsAll( Arrays.asList( "o", "output-dir" ), "Final jar output directory" ).withRequiredArg().ofType( File.class ).defaultsTo( CWD );
-        OptionSpec<String> outputName = parser.accepts( "final-name", "Name of the final jar" ).withRequiredArg();
-        OptionSpec<String> jenkinsVersion = parser.accepts( "rev", "Version to build" ).withRequiredArg().defaultsTo( "latest" );
-        OptionSpec<Compile> toCompile = parser.accepts( "compile", "Software to compile" ).withRequiredArg().ofType( Compile.class ).withValuesConvertedBy( new EnumConverter<Compile>( Compile.class )
+        OptionSpec<File> outputDirFlag = parser.acceptsAll( Arrays.asList( "o", "output-dir" ), "Final jar output directory" ).withRequiredArg().ofType( File.class ).defaultsTo( CWD );
+        OptionSpec<String> outputNameFlag = parser.accepts( "final-name", "Name of the final jar" ).withRequiredArg();
+        OptionSpec<String> jenkinsVersionFlag = parser.accepts( "rev", "Version to build" ).withRequiredArg().defaultsTo( "latest" );
+        OptionSpec<Compile> toCompileFlag = parser.accepts( "compile", "Software to compile" ).withRequiredArg().ofType( Compile.class ).withValuesConvertedBy( new EnumConverter<Compile>( Compile.class )
         {
         } ).withValuesSeparatedBy( ',' );
-        OptionSpec<Void> compileIfChanged = parser.accepts( "compile-if-changed", "Run BuildTools only when changes are detected in the repository" );
-        OptionSpec<PullRequest> buildPullRequest = parser.acceptsAll( Arrays.asList( "pull-request", "pr" ), "Build specific pull requests" ).withOptionalArg().withValuesConvertedBy( new PullRequest.PullRequestConverter() );
+        OptionSpec<Void> compileIfChangedFlag = parser.accepts( "compile-if-changed", "Run BuildTools only when changes are detected in the repository" );
+        OptionSpec<PullRequest> buildPullRequestFlag = parser.acceptsAll( Arrays.asList( "pull-request", "pr" ), "Build specific pull requests" ).withOptionalArg().withValuesConvertedBy( new PullRequest.PullRequestConverter() );
         parser.accepts( "nogui", "Disable the GUI" );
 
         OptionSet options = parser.parse( args );
@@ -180,15 +182,15 @@ public class Builder
             buildInfo = BuildInfo.EXPERIMENTAL;
         }
         remapped = options.has( remappedFlag );
-        compile = options.valuesOf( toCompile );
-        pullRequests = options.valuesOf( buildPullRequest );
+        compile = options.valuesOf( toCompileFlag );
+        pullRequests = options.valuesOf( buildPullRequestFlag );
         validatedPullRequestsOptions();
         if ( options.has( skipCompileFlag ) )
         {
             compile = Collections.singletonList( Compile.NONE );
             System.err.println( "--skip-compile is deprecated, please use --compile NONE" );
         }
-        if ( ( dev || dontUpdate ) && options.has( jenkinsVersion ) )
+        if ( ( dev || dontUpdate ) && options.has( jenkinsVersionFlag ) )
         {
             System.err.println( "Using --dev or --dont-update with --rev makes no sense, exiting." );
             System.exit( 1 );
@@ -269,7 +271,7 @@ public class Builder
 
         if ( !dontUpdate && !dev )
         {
-            String askedVersion = options.valueOf( jenkinsVersion );
+            String askedVersion = options.valueOf( jenkinsVersionFlag );
             System.out.println( "Attempting to build version: '" + askedVersion + "' use --rev <version> to override" );
 
             String verInfo;
@@ -294,7 +296,7 @@ public class Builder
                 System.exit( 1 );
             }
 
-            if ( !options.has( disableJavaCheck ) )
+            if ( !options.has( disableJavaCheckFlag ) )
             {
                 if ( buildInfo.getJavaVersions() == null )
                 {
@@ -379,7 +381,7 @@ public class Builder
             boolean spigotChanged = pull( spigotGit, buildInfo.getRefs().getSpigot(), getPullRequest( Repository.SPIGOT ) );
 
             // Checks if any of the 4 repositories have been updated via a fetch, the --compile-if-changed flag is set and none of the repositories were cloned in this run.
-            if ( !buildDataChanged && !bukkitChanged && !craftBukkitChanged && !spigotChanged && options.has( compileIfChanged ) && !didClone )
+            if ( !buildDataChanged && !bukkitChanged && !craftBukkitChanged && !spigotChanged && options.has( compileIfChangedFlag ) && !didClone )
             {
                 System.out.println( "*** No changes detected in any of the repositories!" );
                 System.out.println( "*** Exiting due to the --compile-if-changed" );
@@ -388,7 +390,7 @@ public class Builder
         }
 
         VersionInfo versionInfo = new Gson().fromJson(
-                Files.asCharSource( new File( "BuildData/info.json" ), Charsets.UTF_8 ).read(),
+                Files.asCharSource( new File( "BuildData/info.json" ), StandardCharsets.UTF_8 ).read(),
                 VersionInfo.class
         );
         // Default to 1.8 builds.
@@ -462,7 +464,7 @@ public class Builder
         Hasher mappingsHash = HashFormat.MD5.getHash().newHasher();
         for ( RevCommit rev : mappings )
         {
-            mappingsHash.putString( rev.getName(), Charsets.UTF_8 );
+            mappingsHash.putString( rev.getName(), StandardCharsets.UTF_8 );
         }
         String mappingsVersion = mappingsHash.hash().toString().substring( 24 ); // Last 8 chars
 
@@ -612,7 +614,7 @@ public class Builder
 
             try
             {
-                List<String> readFile = Files.readLines( file, Charsets.UTF_8 );
+                List<String> readFile = Files.readLines( file, StandardCharsets.UTF_8 );
 
                 // Manually append prelude if it is not found in the first few lines.
                 boolean preludeFound = false;
@@ -630,7 +632,7 @@ public class Builder
                 }
 
                 Patch parsedPatch = DiffUtils.parseUnifiedDiff( readFile );
-                List<?> modifiedLines = DiffUtils.patch( Files.readLines( clean, Charsets.UTF_8 ), parsedPatch );
+                List<?> modifiedLines = DiffUtils.patch( Files.readLines( clean, StandardCharsets.UTF_8 ), parsedPatch );
 
                 try ( BufferedWriter bw = new BufferedWriter( new FileWriter( t ) ) )
                 {
@@ -751,19 +753,19 @@ public class Builder
             finalName = "spigot-" + versionInfo.getMinecraftVersion() + experimental + fileExtension;
         }
 
-        if ( outputName.value( options ) != null )
+        if ( outputNameFlag.value( options ) != null )
         {
-            finalName = outputName.value( options );
+            finalName = outputNameFlag.value( options );
         }
 
         if ( compile.contains( Compile.CRAFTBUKKIT ) && ( versionInfo.getToolsVersion() < 101 || versionInfo.getToolsVersion() > 104 ) )
         {
-            copyJar( "CraftBukkit/target", "craftbukkit", suffix, new File( outputDir.value( options ), "craftbukkit-" + versionInfo.getMinecraftVersion() + ".jar" ) );
+            copyJar( "CraftBukkit/target", "craftbukkit", suffix, new File( outputDirFlag.value( options ), "craftbukkit-" + versionInfo.getMinecraftVersion() + ".jar" ) );
         }
 
         if ( compile.contains( Compile.SPIGOT ) )
         {
-            copyJar( "Spigot/Spigot-Server/target", "spigot", suffix, new File( outputDir.value( options ), finalName ) );
+            copyJar( "Spigot/Spigot-Server/target", "spigot", suffix, new File( outputDirFlag.value( options ), finalName ) );
         }
 
         System.exit( 0 );
@@ -1132,7 +1134,7 @@ public class Builder
         try ( Git result = Git.cloneRepository().setURI( url ).setDirectory( target ).call() )
         {
             StoredConfig config = result.getRepository().getConfig();
-            config.setBoolean( "core", null, "autocrlf", autocrlf );
+            config.setBoolean( "core", null, "autocrlf", AUTOCRLF );
             config.save();
 
             didClone = true;
@@ -1214,7 +1216,7 @@ public class Builder
                 new X509TrustManager()
                 {
                     @Override
-                    public java.security.cert.X509Certificate[] getAcceptedIssuers()
+                    public X509Certificate[] getAcceptedIssuers()
                     {
                         return null;
                     }

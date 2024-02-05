@@ -8,7 +8,7 @@ import lombok.Getter;
 public class JavaVersion
 {
 
-    private static final Map<Integer, JavaVersion> byVersion = new HashMap<Integer, JavaVersion>();
+    private static final Map<Integer, JavaVersion> byVersion = new HashMap<>();
     //
     public static final JavaVersion JAVA_5 = new JavaVersion( "Java 5", 49 );
     public static final JavaVersion JAVA_6 = new JavaVersion( "Java 6", 50 );

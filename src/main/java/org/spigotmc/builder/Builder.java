@@ -996,17 +996,21 @@ public class Builder
         }
         if ( !pb.environment().containsKey( "_JAVA_OPTIONS" ) )
         {
-            String javaOptions = "-Djdk.net.URLClassPath.disableClassPathURLCheck=true";
+            String javaOptions = null;
 
             for ( String arg : ManagementFactory.getRuntimeMXBean().getInputArguments() )
             {
                 if ( arg.startsWith( "-Xmx" ) )
                 {
-                    javaOptions += " " + arg;
+                    javaOptions = arg;
+                    break;
                 }
             }
 
-            pb.environment().put( "_JAVA_OPTIONS", javaOptions );
+            if ( javaOptions != null )
+            {
+                pb.environment().put( "_JAVA_OPTIONS", javaOptions );
+            }
         }
         if ( IS_WINDOWS )
         {

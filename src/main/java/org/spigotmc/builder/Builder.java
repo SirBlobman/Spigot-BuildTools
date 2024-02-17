@@ -345,18 +345,16 @@ public class Builder
         String m2Home = System.getenv( "M2_HOME" );
         if ( m2Home == null || !( maven = new File( m2Home ) ).exists() )
         {
-            String mavenVersion = "apache-maven-3.6.0";
-            maven = new File( mavenVersion );
+            maven = new File( Constants.MAVEN_FOLDER );
 
             if ( !maven.exists() )
             {
                 System.out.println( "Maven does not exist, downloading. Please wait." );
 
-                File mvnTemp = new File( mavenVersion + "-bin.zip" );
+                File mvnTemp = new File( Constants.MAVEN_FILE );
                 mvnTemp.deleteOnExit();
 
-                // https://www.apache.org/dist/maven/maven-3/3.6.0/binaries/apache-maven-3.6.0-bin.zip.sha512
-                download( "https://static.spigotmc.org/maven/" + mvnTemp.getName(), mvnTemp, HashFormat.SHA512, "7d14ab2b713880538974aa361b987231473fbbed20e83586d542c691ace1139026f232bd46fdcce5e8887f528ab1c3fbfc1b2adec90518b6941235952d3868e9" );
+                download( Constants.MAVEN_DOWNLOAD, mvnTemp, HashFormat.SHA512, Constants.MAVEN_HASH );
                 unzip( mvnTemp, new File( "." ) );
                 mvnTemp.delete();
             }

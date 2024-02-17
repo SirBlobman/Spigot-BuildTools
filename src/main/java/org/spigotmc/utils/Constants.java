@@ -40,6 +40,13 @@ public final class Constants {
     public static final String DOWNLOAD_AZUL = "https://www.azul.com/downloads/#zulu";
     public static final String DOWNLOAD_ORACLE = "https://www.oracle.com/java/technologies/downloads/";
 
+    public static final String MAVEN_VERSION = "3.9.6";
+    public static final String MAVEN_HASH = "0eb0432004a91ebf399314ad33e5aaffec3d3b29279f2f143b2f43ade26f4db7bd1c0f08e436e9445ac6dc4a564a2945d13072a160ae54a930e90581284d6461";
+    // Derived
+    public static final String MAVEN_FOLDER = "apache-maven-" + MAVEN_VERSION;
+    public static final String MAVEN_FILE = MAVEN_FOLDER + "-bin.zip";
+    public static final String MAVEN_DOWNLOAD = "https://dlcdn.apache.org/maven/maven-3/" + MAVEN_VERSION + "/binaries/" + MAVEN_FILE;
+
     public static final String FLAG_EXPERIMENTAL = "--experimental";
     public static final String FLAG_OUTPUT_DIR = "--output-dir";
     public static final String FLAG_FINAL_NAME = "--final-name";

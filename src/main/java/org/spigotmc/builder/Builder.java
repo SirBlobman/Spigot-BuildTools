@@ -671,7 +671,7 @@ public class Builder
         // Git spigotServerGit = Git.open( spigotServer );
         if ( compile == null || compile.isEmpty() )
         {
-            if ( versionInfo.getToolsVersion() <= 104 || dev )
+            if ( dev )
             {
                 compile = Arrays.asList( Compile.CRAFTBUKKIT, Compile.SPIGOT );
             } else
@@ -752,7 +752,7 @@ public class Builder
             finalName = outputNameFlag.value( options );
         }
 
-        if ( compile.contains( Compile.CRAFTBUKKIT ) && ( versionInfo.getToolsVersion() < 101 || versionInfo.getToolsVersion() > 104 ) )
+        if ( compile.contains( Compile.CRAFTBUKKIT ) )
         {
             copyJar( "CraftBukkit/target", "craftbukkit", suffix, new File( outputDirFlag.value( options ), "craftbukkit-" + versionInfo.getMinecraftVersion() + ".jar" ) );
         }

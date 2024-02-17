@@ -96,6 +96,25 @@
         <finalName>${project.name}</finalName>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[9,)</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>net.md-5</groupId>
                 <artifactId>scriptus</artifactId>
                 <version>0.5.0</version>
@@ -155,6 +174,31 @@
                         </filter>
                     </filters>
                     <minimizeJar>true</minimizeJar>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <includeDependency>false</includeDependency>
+                    <obfuscate>false</obfuscate>
+                    <options>
+                        <option>-dontoptimize</option>
+                        <option>-dontwarn</option>
+                        <option>-keep class org.spigotmc.** { *; }</option>
+                        <option>-keep class com.formdev.flatlaf.** { *; }</option>
+                        <option>-keepclassmembers enum * { *; }</option>
+                        <option>-libraryjars ${java.home}/jmods(!**.jar;!module-info.class)</option>
+                    </options>
                 </configuration>
             </plugin>
             <plugin>

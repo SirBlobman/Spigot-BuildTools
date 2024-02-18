@@ -51,6 +51,7 @@ import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -66,6 +67,7 @@ import joptsimple.util.EnumConverter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.TeeOutputStream;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -104,6 +106,7 @@ public class Builder
 
     public static void main(String[] args) throws Exception
     {
+        long start = System.nanoTime();
         System.out.println( Arrays.toString( args ) );
 
         // May be null
@@ -727,6 +730,18 @@ public class Builder
             System.out.println( " " );
         }
 
+        long end = System.nanoTime();
+        long duration = TimeUnit.NANOSECONDS.toMillis( end - start );
+
+        if ( duration / 1000F >= 60 )
+        {
+            System.out.println( "Total Time: " + DurationFormatUtils.formatDurationWords( duration, true, true ) );
+        } else
+        {
+            System.out.println( "Total Time: " + DurationFormatUtils.formatDuration( duration, "s.SS' seconds'" ) );
+        }
+
+        System.out.println();
         System.out.println( "Success! Everything completed successfully. Copying final .jar files now." );
 
         String fileExtension = ".jar";

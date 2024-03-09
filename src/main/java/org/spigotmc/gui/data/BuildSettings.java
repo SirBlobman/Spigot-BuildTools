@@ -44,6 +44,8 @@ public final class BuildSettings {
     public List<String> getArguments() {
         List<String> args = new ArrayList<>();
 
+        args.add(Constants.FLAG_NOGUI); // We definitely don't want the GUI for the child builder process
+
         if (version.equals("experimental")) {
             args.add(Constants.FLAG_EXPERIMENTAL);
 
@@ -128,12 +130,6 @@ public final class BuildSettings {
         if (!finalName.isEmpty()) {
             args.add(Constants.FLAG_FINAL_NAME);
             args.add(finalName);
-        }
-
-        // If no arguments are provided, the GUI will end up spawning another instance of the GUI.
-        if (args.isEmpty()) {
-            args.add(Constants.FLAG_VERSION);
-            args.add(version);
         }
 
         return args;

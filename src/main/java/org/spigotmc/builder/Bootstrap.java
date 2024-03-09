@@ -2,7 +2,9 @@ package org.spigotmc.builder;
 
 import com.google.common.base.Joiner;
 import java.awt.GraphicsEnvironment;
+import joptsimple.OptionSet;
 import org.spigotmc.gui.BuildToolsGui;
+import org.spigotmc.utils.Flags;
 import org.spigotmc.utils.SwingUtils;
 import org.spigotmc.utils.Utils;
 
@@ -13,9 +15,11 @@ public class Bootstrap
 
     public static void main(String[] args) throws Exception
     {
-        if ( args.length == 0 )
+        OptionSet options = Flags.PARSER.parse( args );
+
+        if ( ( args.length == 0 && !Utils.isRanFromCommandLine() ) || options.has( Flags.GUI_FLAG ) )
         {
-            if ( !Utils.isRanFromCommandLine() )
+            if ( !options.has( Flags.NO_GUI_FLAG ) )
             {
                 if ( !GraphicsEnvironment.isHeadless() )
                 {
@@ -53,7 +57,7 @@ public class Bootstrap
             }
 
             Builder.logOutput( System.out, System.err );
-            Builder.main( args );
+            Builder.startBuilder( args, options );
         }
     }
 }

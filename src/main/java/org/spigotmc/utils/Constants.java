@@ -60,6 +60,7 @@ public final class Constants {
     public static final String FLAG_GENERATE_DOCS = "--generate-docs";
     public static final String FLAG_COMPILE_IF_CHANGED = "--compile-if-changed";
     public static final String FLAG_COMPILE = "--compile";
+    public static final String FLAG_NOGUI = "--nogui";
 
     public static final String LATEST_WARNING = "NOTE: 'latest' refers to the latest stable version and may not necessarily correlate to the absolute newest version available!";
 

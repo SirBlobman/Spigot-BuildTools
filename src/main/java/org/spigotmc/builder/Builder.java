@@ -60,10 +60,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-import joptsimple.util.EnumConverter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.TeeOutputStream;
@@ -79,6 +76,7 @@ import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.spigotmc.mapper.MapUtil;
 import org.spigotmc.utils.Constants;
+import org.spigotmc.utils.Flags;
 
 public class Builder
 {
@@ -104,7 +102,7 @@ public class Builder
     private static File msysDir;
     private static File maven;
 
-    public static void main(String[] args) throws Exception
+    public static void startBuilder(String[] args, OptionSet options) throws Exception
     {
         long start = System.nanoTime();
         System.out.println( Arrays.toString( args ) );
@@ -136,58 +134,35 @@ public class Builder
             System.exit( 1 );
         }
 
-        OptionParser parser = new OptionParser();
-        OptionSpec<Void> help = parser.accepts( "help", "Show the help" );
-        OptionSpec<Void> disableCertFlag = parser.accepts( "disable-certificate-check", "Disable HTTPS certificate check" );
-        OptionSpec<Void> disableJavaCheckFlag = parser.accepts( "disable-java-check", "Disable Java version check" );
-        OptionSpec<Void> dontUpdateFlag = parser.accepts( "dont-update", "Don't pull updates from Git" );
-        OptionSpec<Void> skipCompileFlag = parser.accepts( "skip-compile", "Skip compilation" );
-        OptionSpec<Void> generateSourceFlag = parser.accepts( "generate-source", "Generate source jar" );
-        OptionSpec<Void> generateDocsFlag = parser.accepts( "generate-docs", "Generate Javadoc jar" );
-        OptionSpec<Void> devFlag = parser.accepts( "dev", "Development mode" );
-        OptionSpec<Void> experimentalFlag = parser.accepts( "experimental", "Build experimental version" );
-        OptionSpec<Void> remappedFlag = parser.accepts( "remapped", "Produce and install extra remapped jars" );
-        OptionSpec<File> outputDirFlag = parser.acceptsAll( Arrays.asList( "o", "output-dir" ), "Final jar output directory" ).withRequiredArg().ofType( File.class ).defaultsTo( CWD );
-        OptionSpec<String> outputNameFlag = parser.accepts( "final-name", "Name of the final jar" ).withRequiredArg();
-        OptionSpec<String> jenkinsVersionFlag = parser.accepts( "rev", "Version to build" ).withRequiredArg().defaultsTo( "latest" );
-        OptionSpec<Compile> toCompileFlag = parser.accepts( "compile", "Software to compile" ).withRequiredArg().ofType( Compile.class ).withValuesConvertedBy( new EnumConverter<Compile>( Compile.class )
+        if ( options.has( Flags.HELP_FLAG ) )
         {
-        } ).withValuesSeparatedBy( ',' );
-        OptionSpec<Void> compileIfChangedFlag = parser.accepts( "compile-if-changed", "Run BuildTools only when changes are detected in the repository" );
-        OptionSpec<PullRequest> buildPullRequestFlag = parser.acceptsAll( Arrays.asList( "pull-request", "pr" ), "Build specific pull requests" ).withOptionalArg().withValuesConvertedBy( new PullRequest.PullRequestConverter() );
-        parser.accepts( "nogui", "Disable the GUI" );
-
-        OptionSet options = parser.parse( args );
-
-        if ( options.has( help ) )
-        {
-            parser.printHelpOn( System.out );
+            Flags.PARSER.printHelpOn( System.out );
             System.exit( 0 );
         }
-        if ( options.has( disableCertFlag ) )
+        if ( options.has( Flags.DISABLE_CERT_FLAG ) )
         {
             disableHttpsCertificateCheck();
         }
-        dontUpdate = options.has( dontUpdateFlag );
-        generateSource = options.has( generateSourceFlag );
-        generateDocs = options.has( generateDocsFlag );
-        dev = options.has( devFlag );
+        dontUpdate = options.has( Flags.DONT_UPDATE_FLAG );
+        generateSource = options.has( Flags.GENERATE_SOURCE_FLAG );
+        generateDocs = options.has( Flags.GENERATE_DOCS_FLAG );
+        dev = options.has( Flags.DEV_FLAG );
         // Experimental implies dev but with different refs
-        if ( options.has( experimentalFlag ) )
+        if ( options.has( Flags.EXPERIMENTAL_FLAG ) )
         {
             dev = true;
             buildInfo = BuildInfo.EXPERIMENTAL;
         }
-        remapped = options.has( remappedFlag );
-        compile = options.valuesOf( toCompileFlag );
-        pullRequests = options.valuesOf( buildPullRequestFlag );
+        remapped = options.has( Flags.REMAPPED_FLAG );
+        compile = options.valuesOf( Flags.TO_COMPILE_FLAG );
+        pullRequests = options.valuesOf( Flags.BUILD_PULL_REQUEST_FLAG );
         validatedPullRequestsOptions();
-        if ( options.has( skipCompileFlag ) )
+        if ( options.has( Flags.SKIP_COMPILE_FLAG ) )
         {
             compile = Collections.singletonList( Compile.NONE );
             System.err.println( "--skip-compile is deprecated, please use --compile NONE" );
         }
-        if ( ( dev || dontUpdate ) && options.has( jenkinsVersionFlag ) )
+        if ( ( dev || dontUpdate ) && options.has( Flags.JENKINS_VERSION_FLAG ) )
         {
             System.err.println( "Using --dev or --dont-update with --rev makes no sense, exiting." );
             System.exit( 1 );
@@ -268,7 +243,7 @@ public class Builder
 
         if ( !dontUpdate && !dev )
         {
-            String askedVersion = options.valueOf( jenkinsVersionFlag );
+            String askedVersion = options.valueOf( Flags.JENKINS_VERSION_FLAG );
             System.out.println( "Attempting to build version: '" + askedVersion + "' use --rev <version> to override" );
 
             String verInfo;
@@ -293,7 +268,7 @@ public class Builder
                 System.exit( 1 );
             }
 
-            if ( !options.has( disableJavaCheckFlag ) )
+            if ( !options.has( Flags.DISABLE_JAVA_CHECK_FLAG ) )
             {
                 if ( buildInfo.getJavaVersions() == null )
                 {
@@ -376,7 +351,7 @@ public class Builder
             boolean spigotChanged = pull( spigotGit, buildInfo.getRefs().getSpigot(), getPullRequest( Repository.SPIGOT ) );
 
             // Checks if any of the 4 repositories have been updated via a fetch, the --compile-if-changed flag is set and none of the repositories were cloned in this run.
-            if ( !buildDataChanged && !bukkitChanged && !craftBukkitChanged && !spigotChanged && options.has( compileIfChangedFlag ) && !didClone )
+            if ( !buildDataChanged && !bukkitChanged && !craftBukkitChanged && !spigotChanged && options.has( Flags.COMPILE_IF_CHANGED_FLAG ) && !didClone )
             {
                 System.out.println( "*** No changes detected in any of the repositories!" );
                 System.out.println( "*** Exiting due to the --compile-if-changed" );
@@ -754,25 +729,25 @@ public class Builder
 
         String finalName = "spigot-" + versionInfo.getMinecraftVersion() + fileExtension;
 
-        if ( options.has( experimentalFlag ) )
+        if ( options.has( Flags.EXPERIMENTAL_FLAG ) )
         {
             suffix = versionInfo.getMinecraftVersion() + experimental + snapshot + bootstrap + fileExtension;
             finalName = "spigot-" + versionInfo.getMinecraftVersion() + experimental + fileExtension;
         }
 
-        if ( outputNameFlag.value( options ) != null )
+        if ( Flags.OUTPUT_NAME_FLAG.value( options ) != null )
         {
-            finalName = outputNameFlag.value( options );
+            finalName = Flags.OUTPUT_NAME_FLAG.value( options );
         }
 
         if ( compile.contains( Compile.CRAFTBUKKIT ) )
         {
-            copyJar( "CraftBukkit/target", "craftbukkit", suffix, new File( outputDirFlag.value( options ), "craftbukkit-" + versionInfo.getMinecraftVersion() + ".jar" ) );
+            copyJar( "CraftBukkit/target", "craftbukkit", suffix, new File( Flags.OUTPUT_DIR_FLAG.value( options ), "craftbukkit-" + versionInfo.getMinecraftVersion() + ".jar" ) );
         }
 
         if ( compile.contains( Compile.SPIGOT ) )
         {
-            copyJar( "Spigot/Spigot-Server/target", "spigot", suffix, new File( outputDirFlag.value( options ), finalName ) );
+            copyJar( "Spigot/Spigot-Server/target", "spigot", suffix, new File( Flags.OUTPUT_DIR_FLAG.value( options ), finalName ) );
         }
 
         System.exit( 0 );

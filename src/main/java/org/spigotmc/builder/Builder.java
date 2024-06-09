@@ -188,9 +188,9 @@ public class Builder
         {
             if ( IS_WINDOWS )
             {
-                String gitVersion = "PortableGit-2.30.0-" + ( System.getProperty( "os.arch" ).endsWith( "64" ) ? "64" : "32" ) + "-bit";
-                // https://github.com/git-for-windows/git/releases/tag/v2.30.0.windows.1
-                String gitHash = System.getProperty( "os.arch" ).endsWith( "64" ) ? "6497e30fc6141e3c27af6cc3a081861043a7666dd54f395d47184e8eb75f5d61" : "b3768c64b6afa082043659c56acb4c3483df6b6e884fdc7e3c769f7e7e99a3a8";
+                String gitVersion = "PortableGit-2.45.2-" + ( System.getProperty( "os.arch" ).endsWith( "64" ) ? "64" : "32" ) + "-bit";
+                // https://github.com/git-for-windows/git/releases/tag/v2.45.2.windows.1
+                String gitHash = System.getProperty( "os.arch" ).endsWith( "64" ) ? "851a15074dea6b272785b2a2a4697a72970256de2afe7b8e4a9c5e168c27ccdd" : "cfea9e414567d0c59c75ccc5a0e58feeef4dcfc0ea8bfd76efb5e4e22813f5d0";
                 msysDir = new File( gitVersion, "PortableGit" );
 
                 if ( !msysDir.isDirectory() )
@@ -204,7 +204,7 @@ public class Builder
 
                     if ( !gitInstall.exists() )
                     {
-                        download( "https://github.com/git-for-windows/git/releases/download/v2.30.0.windows.1/" + gitName, gitInstall, HashFormat.SHA256, gitHash );
+                        download( "https://github.com/git-for-windows/git/releases/download/v2.45.2.windows.1/" + gitName, gitInstall, HashFormat.SHA256, gitHash );
                     }
 
                     System.out.println( "Extracting downloaded git install" );

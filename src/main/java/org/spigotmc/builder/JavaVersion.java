@@ -8,6 +8,7 @@ import lombok.Getter;
 public class JavaVersion
 {
 
+    private static JavaVersion latestVersion;
     private static final Map<Integer, JavaVersion> byVersion = new HashMap<>();
     //
     public static final JavaVersion JAVA_5 = new JavaVersion( "Java 5", 49 );
@@ -36,6 +37,11 @@ public class JavaVersion
     private JavaVersion(String name, int version)
     {
         this( name, version, false );
+
+        if ( latestVersion == null || version > latestVersion.getVersion() )
+        {
+            latestVersion = this;
+        }
     }
 
     private JavaVersion(String name, int version, boolean unknown)
@@ -58,10 +64,15 @@ public class JavaVersion
         JavaVersion java = byVersion.get( version );
         if ( java == null )
         {
-            java = new JavaVersion( "Java " + ( version - 44 ) + "*", version, true );
+            java = new JavaVersion( "Java " + ( version - 44 ) + " [" + version + "]*", version, true );
         }
 
         return java;
+    }
+
+    public static JavaVersion getLatestVersion()
+    {
+        return latestVersion;
     }
 
     public static JavaVersion getCurrentVersion()

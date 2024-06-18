@@ -107,6 +107,11 @@ public final class BuildData {
         }
 
         return builds.get(checkVersion).thenApply((BuildInfo info) -> {
+            if (buildSettings.isOverrideJavaExecutable()) {
+                javaInstallationManager.setSelectedInstallation(javaInstallationManager.getSelectedInstallation());
+                return true;
+            }
+
             if (info.getJavaVersions() == null) {
                 info.setJavaVersions(new int[]{
                         JavaVersion.JAVA_7.getVersion(),

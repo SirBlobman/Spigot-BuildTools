@@ -2,14 +2,14 @@ package org.spigotmc.builder;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import lombok.Getter;
 
 @Getter
 public class JavaVersion
 {
 
-    private static final Map<Integer, JavaVersion> byVersion = new HashMap<Integer, JavaVersion>();
+    private static JavaVersion latestVersion;
+    private static final Map<Integer, JavaVersion> byVersion = new HashMap<>();
     //
     public static final JavaVersion JAVA_5 = new JavaVersion( "Java 5", 49 );
     public static final JavaVersion JAVA_6 = new JavaVersion( "Java 6", 50 );
@@ -27,53 +27,73 @@ public class JavaVersion
     public static final JavaVersion JAVA_18 = new JavaVersion( "Java 18", 62 );
     public static final JavaVersion JAVA_19 = new JavaVersion( "Java 19", 63 );
     public static final JavaVersion JAVA_20 = new JavaVersion( "Java 20", 64 );
+    public static final JavaVersion JAVA_21 = new JavaVersion( "Java 21", 65 );
+    public static final JavaVersion JAVA_22 = new JavaVersion( "Java 22", 66 );
     //
     private final String name;
     private final int version;
     private final boolean unknown;
-    
-    private JavaVersion(String name, int version) {
-        this(name, version, false);
+
+    private JavaVersion(String name, int version)
+    {
+        this( name, version, false );
+
+        if ( latestVersion == null || version > latestVersion.getVersion() )
+        {
+            latestVersion = this;
+        }
     }
-    
-    private JavaVersion(String name, int version, boolean unknown) {
+
+    private JavaVersion(String name, int version, boolean unknown)
+    {
         this.name = name;
         this.version = version;
         this.unknown = unknown;
-        
-        byVersion.put(version, this);
+
+        byVersion.put( version, this );
     }
-    
-    public static JavaVersion getByVersion(int version) {
-        JavaVersion java = byVersion.get(version);
-        if(java == null) {
-            java = new JavaVersion("Java " + (version - 44) + "*", version, true);
+
+    @Override
+    public String toString()
+    {
+        return getName();
+    }
+
+    public static JavaVersion getByVersion(int version)
+    {
+        JavaVersion java = byVersion.get( version );
+        if ( java == null )
+        {
+            java = new JavaVersion( "Java " + ( version - 44 ) + " [" + version + "]*", version, true );
         }
-        
+
         return java;
     }
-    
-    public static JavaVersion getCurrentVersion() {
-        return getByVersion((int) Float.parseFloat(System.getProperty("java.class.version")));
+
+    public static JavaVersion getLatestVersion()
+    {
+        return latestVersion;
     }
-    
-    public static String printVersions(int[] versions) {
+
+    public static JavaVersion getCurrentVersion()
+    {
+        return getByVersion( (int) Float.parseFloat( System.getProperty( "java.class.version" ) ) );
+    }
+
+    public static String printVersions(int[] versions)
+    {
         StringBuilder sb = new StringBuilder();
-        
-        sb.append('[');
-        for(int v : versions) {
-            JavaVersion found = getByVersion(v);
-            sb.append(found);
-            sb.append(", ");
+
+        sb.append( '[' );
+        for ( int v : versions )
+        {
+            JavaVersion found = getByVersion( v );
+            sb.append( found );
+            sb.append( ", " );
         }
-        sb.setLength(sb.length() - 2);
-        sb.append(']');
-        
+        sb.setLength( sb.length() - 2 );
+        sb.append( ']' );
+
         return sb.toString();
-    }
-    
-    @Override
-    public String toString() {
-        return getName();
     }
 }

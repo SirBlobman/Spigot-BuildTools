@@ -1,30 +1,63 @@
 package org.spigotmc.builder;
 
-public final class Bootstrap {
-    public static void main(String[] args) throws Exception {
-        JavaVersion javaVersion = JavaVersion.getCurrentVersion();
+import com.google.common.base.Joiner;
+import java.awt.GraphicsEnvironment;
+import joptsimple.OptionSet;
+import org.spigotmc.gui.BuildToolsGui;
+import org.spigotmc.utils.Flags;
+import org.spigotmc.utils.SwingUtils;
+import org.spigotmc.utils.Utils;
 
-        if ( javaVersion.isUnknown() )
+public class Bootstrap
+{
+
+    private static boolean guiEnabled = false;
+
+    public static void main(String[] args) throws Exception
+    {
+        OptionSet options = Flags.PARSER.parse( args );
+
+        if ( ( args.length == 0 && !Utils.isRanFromCommandLine() ) || options.has( Flags.GUI_FLAG ) )
         {
-            System.err.println( "*** WARNING *** Unsupported Java detected (" + System.getProperty( "java.class.version" ) + "). BuildTools has only been tested up to Java 20. Use of development Java versions is not supported." );
-            System.err.println( "*** WARNING *** You may use java -version to double check your Java version." );
+            if ( !options.has( Flags.NO_GUI_FLAG ) )
+            {
+                if ( !GraphicsEnvironment.isHeadless() )
+                {
+                    guiEnabled = true;
+
+                    SwingUtils.applyInitialTheme();
+
+                    BuildToolsGui gui = new BuildToolsGui();
+                    gui.setLocationRelativeTo( null );
+                    gui.setVisible( true );
+                } else
+                {
+                    System.err.println( "Headless environment detected, BuildTools GUI unavailable." );
+                }
+            }
         }
-        
-        long memoryBytes = Runtime.getRuntime().maxMemory();
-        long memoryMb = (memoryBytes >> 20);
-        if(memoryMb < 448) {
-            printError("BuildTools requires at least 512M of memory to run (1024M recommended),"
-                    + "but has only detected " + memoryMb + "M.");
-            printError("This can often occur if you are running a 32-bit system, or one with low RAM.");
-            printError("Please re-run BuildTools with manually specified memory, e.g: "
-                    + "'java -Xmx1024M -jar BuildTools.jar " + String.join(" ", args) + "'");
-            System.exit(1);
+
+        if ( !guiEnabled )
+        {
+            JavaVersion javaVersion = JavaVersion.getCurrentVersion();
+
+            if ( javaVersion.isUnknown() )
+            {
+                System.err.println( "*** WARNING *** Unsupported Java detected (" + javaVersion + "). BuildTools has only been tested up to " + JavaVersion.getLatestVersion() + ". Use of development Java versions is not supported." );
+                System.err.println( "*** WARNING *** You may use java -version to double check your Java version." );
+            }
+
+            long memoryMb = Runtime.getRuntime().maxMemory() >> 20;
+            if ( memoryMb < 448 ) // Older JVMs (including Java 8) report less than Xmx here. Allow some slack for people actually using -Xmx512M
+            {
+                System.err.println( "BuildTools requires at least 512M of memory to run (1024M recommended), but has only detected " + memoryMb + "M." );
+                System.err.println( "This can often occur if you are running a 32-bit system, or one with low RAM." );
+                System.err.println( "Please re-run BuildTools with manually specified memory, e.g: java -Xmx1024M -jar BuildTools.jar " + Joiner.on( ' ' ).join( args ) );
+                System.exit( 1 );
+            }
+
+            Builder.logOutput( System.out, System.err );
+            Builder.startBuilder( args, options );
         }
-        
-        Builder.main(args);
-    }
-    
-    private static void printError(String message) {
-        System.err.println(message);
     }
 }

@@ -181,6 +181,17 @@ public class Builder
             }
         }
 
+        // Added by SirBlobman
+        String deployRepositoryId = null;
+        URL deployRepositoryUrl = null;
+
+        if (options.has(Flags.DEPLOY_ID_FLAG) && options.has(Flags.DEPLOY_URL_FLAG)) {
+            deployRepositoryId = options.valueOf(Flags.DEPLOY_ID_FLAG);
+            deployRepositoryUrl = options.valueOf(Flags.DEPLOY_URL_FLAG);
+        }
+
+        boolean deploy = (deployRepositoryId != null && deployRepositoryUrl != null && !deployRepositoryId.isEmpty());
+
         try
         {
             runProcess( CWD, "sh", "-c", "exit" );
@@ -470,6 +481,12 @@ public class Builder
                 {
                     runMavenInstall( CWD, "install:install-file", "-Dfile=" + memberMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-members", "-DgeneratePom=false" );
+
+                    if (deploy) {
+                        runMavenInstall(CWD, "deploy:deploy-file", "-Dfile=" + memberMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
+                          "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-members", "-DgeneratePom=false",
+                          "-DrepositoryId=" + deployRepositoryId, "-Durl=" + deployRepositoryUrl);
+                    }
                 }
 
                 // 1.17
@@ -477,6 +494,12 @@ public class Builder
                 {
                     runMavenInstall( CWD, "install:install-file", "-Dfile=" + fieldMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-fields", "-DgeneratePom=false" );
+
+                    if (deploy) {
+                        runMavenInstall( CWD, "deploy:deploy-file", "-Dfile=" + fieldMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
+                          "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot-fields", "-DgeneratePom=false",
+                          "-DrepositoryId=" + deployRepositoryId, "-Durl=" + deployRepositoryUrl);
+                    }
 
                     File combinedMappings = new File( workDir, "bukkit-" + mappingsVersion + "-combined.csrg" );
                     if ( !combinedMappings.exists() )
@@ -486,16 +509,34 @@ public class Builder
 
                     runMavenInstall( CWD, "install:install-file", "-Dfile=" + combinedMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot", "-DgeneratePom=false" );
+
+                    if (deploy) {
+                        runMavenInstall( CWD, "deploy:deploy-file", "-Dfile=" + combinedMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
+                          "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot", "-DgeneratePom=false",
+                          "-DrepositoryId=" + deployRepositoryId, "-Durl=" + deployRepositoryUrl);
+                    }
                 } else
                 {
                     // 1.18+
                     runMavenInstall( CWD, "install:install-file", "-Dfile=" + classMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
                             "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot", "-DgeneratePom=false" );
+
+                    if (deploy) {
+                        runMavenInstall( CWD, "deploy:deploy-file", "-Dfile=" + classMappings, "-Dpackaging=csrg", "-DgroupId=org.spigotmc",
+                          "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-spigot", "-DgeneratePom=false",
+                          "-DrepositoryId=" + deployRepositoryId, "-Durl=" + deployRepositoryUrl);
+                    }
                 }
 
                 // 1.17+
                 runMavenInstall( CWD, "install:install-file", "-Dfile=" + mojangMappings, "-Dpackaging=txt", "-DgroupId=org.spigotmc",
                         "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-mojang", "-DgeneratePom=false" );
+
+                if (deploy) {
+                    runMavenInstall( CWD, "deploy:deploy-file", "-Dfile=" + mojangMappings, "-Dpackaging=txt", "-DgroupId=org.spigotmc",
+                      "-DartifactId=minecraft-server", "-Dversion=" + versionInfo.getSpigotVersion(), "-Dclassifier=maps-mojang", "-DgeneratePom=false",
+                      "-DrepositoryId=" + deployRepositoryId, "-Durl=" + deployRepositoryUrl);
+                }
             }
 
             File clMappedJar = new File( finalMappedJar + "-cl" );
@@ -524,6 +565,12 @@ public class Builder
 
         runMavenInstall( CWD, "install:install-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
                 "-DartifactId=minecraft-server", "-Dversion=" + ( versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT" ) );
+
+        if (deploy) {
+            runMavenInstall( CWD, "deploy:deploy-file", "-Dfile=" + finalMappedJar, "-Dpackaging=jar", "-DgroupId=org.spigotmc",
+              "-DartifactId=minecraft-server", "-Dversion=" + ( versionInfo.getSpigotVersion() != null ? versionInfo.getSpigotVersion() : versionInfo.getMinecraftVersion() + "-SNAPSHOT" ),
+              "-DrepositoryId=" + deployRepositoryId, "-Durl=" + deployRepositoryUrl);
+        }
 
         File decompileDir = new File( workDir, "decompile-" + mappingsVersion );
         if ( !decompileDir.exists() )
@@ -657,19 +704,33 @@ public class Builder
         }
         if ( compile.contains( Compile.CRAFTBUKKIT ) )
         {
+            String[] commands;
+
+            if (deploy) {
+                commands = new String[] {"clean", "deploy", "-DaltDeploymentRepository=" + deployRepositoryId + "::default::" + deployRepositoryUrl};
+            } else {
+                commands = new String[] {"clean", "install"};
+            }
+
             System.out.println( "Compiling Bukkit" );
-            runMavenAPI( bukkit, "clean", "install" );
+            runMavenAPI( bukkit, commands);
+
             if ( generateDocs )
             {
                 runMavenAPI( bukkit, "javadoc:jar" );
             }
+
             if ( generateSource )
             {
                 runMavenAPI( bukkit, "source:jar" );
             }
 
+            if (deploy) {
+                runMavenAPI(bukkit, "deploy", "-DaltDeploymentRepository=" + deployRepositoryId + "::default::" + deployRepositoryUrl);
+            }
+
             System.out.println( "Compiling CraftBukkit" );
-            runMavenServer( craftBukkit, "clean", "install" );
+            runMavenServer( craftBukkit, commands);
         }
 
         try
@@ -679,14 +740,23 @@ public class Builder
                 runProcess( spigot, applyPatchesShell, "applyPatches.sh" );
                 System.out.println( "*** Spigot patches applied!" );
 
+                String[] commands;
+
+                if (deploy) {
+                    commands = new String[] {"clean", "deploy", "-DaltDeploymentRepository=" + deployRepositoryId + "::default::" + deployRepositoryUrl};
+                } else {
+                    commands = new String[] {"clean", "install"};
+                }
+
                 System.out.println( "Compiling Spigot & Spigot-API" );
-                runMavenServer( spigot, "clean", "install" );
+                runMavenServer( spigot, commands);
 
                 File spigotApi = new File( spigot, "Spigot-API" );
                 if ( generateDocs )
                 {
                     runMavenAPI( spigotApi, "javadoc:jar" );
                 }
+
                 if ( generateSource )
                 {
                     runMavenAPI( spigotApi, "source:jar" );

@@ -1,6 +1,7 @@
 package org.spigotmc.utils;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Arrays;
 import joptsimple.OptionParser;
 import joptsimple.OptionSpec;
@@ -34,4 +35,8 @@ public class Flags
     public static final OptionSpec<PullRequest> BUILD_PULL_REQUEST_FLAG = PARSER.acceptsAll( Arrays.asList( "pull-request", "pr" ), "Build specific pull requests" ).withOptionalArg().withValuesConvertedBy( new PullRequest.PullRequestConverter() );
     public static final OptionSpec<Void> GUI_FLAG = PARSER.accepts( "gui", "Explicitly show the GUI" );
     public static final OptionSpec<Void> NO_GUI_FLAG = PARSER.accepts( "nogui", "Explicitly don't show the GUI" );
+
+    // Added by SirBlobman
+    public static final OptionSpec<String> DEPLOY_ID_FLAG = PARSER.accepts("deploy-id", "ID of the maven repository to deploy jars.").withRequiredArg().ofType(String.class);
+    public static final OptionSpec<URL> DEPLOY_URL_FLAG = PARSER.accepts("deploy-url", "URL of the maven repository to deploy jars.").withRequiredArg().ofType(URL.class);
 }

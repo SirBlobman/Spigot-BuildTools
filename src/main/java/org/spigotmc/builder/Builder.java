@@ -383,7 +383,7 @@ public class Builder
         {
             if ( versionInfo.getServerUrl() != null )
             {
-                download( versionInfo.getServerUrl(), vanillaJar, HashFormat.MD5, versionInfo.getMinecraftHash() );
+                download( versionInfo.getServerUrl().replace("launcher.mojang", "piston-data.mojang"), vanillaJar, HashFormat.MD5, versionInfo.getMinecraftHash() );
             } else
             {
                 download( getServerVanillaUrl( versionInfo.getMinecraftVersion() ), vanillaJar, HashFormat.MD5, versionInfo.getMinecraftHash() );
@@ -451,7 +451,7 @@ public class Builder
                 File mojangMappings = new File( workDir, "minecraft_server." + versionInfo.getMinecraftVersion() + ".txt" );
                 if ( !mojangMappings.exists() )
                 {
-                    download( versionInfo.getMappingsUrl(), mojangMappings );
+                    download( versionInfo.getMappingsUrl().replace("launcher.mojang.com", "piston-data.mojang.com"), mojangMappings );
                 }
 
                 MapUtil mapUtil = new MapUtil();
@@ -1168,7 +1168,7 @@ public class Builder
     {
         Gson gson = new Gson();
 
-        String responseManifest = get( "https://launchermeta.mojang.com/mc/game/version_manifest.json" );
+        String responseManifest = get( "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json" );
         JsonObject manifest = gson.fromJson( responseManifest, JsonObject.class );
 
         JsonArray manifestVersions = manifest.getAsJsonArray( "versions" );

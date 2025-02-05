@@ -87,7 +87,7 @@
         <dependency>
             <groupId>com.jeff-media</groupId>
             <artifactId>javafinder</artifactId>
-            <version>1.4.3</version>
+            <version>1.4.4</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

@@ -99,7 +99,7 @@
     </dependencies>
 
     <build>
-        <finalName>${project.name}</finalName>
+        <finalName>${project.name}-Custom</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

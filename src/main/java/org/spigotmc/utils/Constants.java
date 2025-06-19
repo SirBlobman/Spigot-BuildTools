@@ -45,7 +45,7 @@ public final class Constants {
     // Derived
     public static final String MAVEN_FOLDER = "apache-maven-" + MAVEN_VERSION;
     public static final String MAVEN_FILE = MAVEN_FOLDER + "-bin.zip";
-    public static final String MAVEN_DOWNLOAD = "https://dlcdn.apache.org/maven/maven-3/" + MAVEN_VERSION + "/binaries/" + MAVEN_FILE;
+    public static final String MAVEN_DOWNLOAD = "https://archive.apache.org/dist/maven/maven-3/" + MAVEN_VERSION + "/binaries/" + MAVEN_FILE;
 
     public static final String FLAG_EXPERIMENTAL = "--experimental";
     public static final String FLAG_OUTPUT_DIR = "--output-dir";
